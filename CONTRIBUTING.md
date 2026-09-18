@@ -15,7 +15,7 @@ disabled and all features enabled, a **95% library line coverage gate**, rustdoc
 denied, and `cargo package` with compilation verification. Cargo.lock is tracked
 so local and CI checks resolve the same dependencies. The default build has none. Package verification creates an archive locally; it does not publish it.
 
-The pre-commit hook checks a temporary snapshot of the Git index, so partially
+The pre-commit and pre-merge-commit hooks check a temporary snapshot of the Git index, so partially
 staged edits are checked as they would be committed. New files must be staged.
 The snapshot and its build outputs are removed afterward. This shell-based hook
 requires Bash, Git, tar, and Rust tooling and is validated on Linux. Hooks must
