@@ -131,3 +131,27 @@ Raw JSON records pinned dependency versions, source/binary hashes, compiler,
 Git state, host/storage information, all samples and process peak RSS. The
 warm-cache and RSS limitations described above apply; these results should not
 be combined with older justPFM trials as if all libraries ran simultaneously.
+
+### Recorded Rust results
+
+Measured on 2026-09-18 UTC on the same Ryzen 9 7940HS Linux/ext4 host,
+Rust 1.98.1, clean commit `ceca8888354ee842aa3618572a62e8f630a2fc98`.
+No other project builds or tests ran during measurement; the OS was not isolated.
+Raw data: [first trial](benchmarks/results/2026-09-18-zune.json) and
+[reversed-order trial](benchmarks/results/2026-09-18-zune-reversed.json).
+Each value is the median of five calls in milliseconds; smaller is better.
+
+| Size | Channels | rustPFM | zune-ppm | rustPFM reversed | zune-ppm reversed |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1024² | 1 | 0.728 | 5.386 | 0.680 | 5.401 |
+| 1024² | 3 | 2.842 | 15.994 | 2.833 | 15.999 |
+| 2048² | 1 | 4.483 | 21.464 | 4.606 | 21.324 |
+| 2048² | 3 | 26.539 | 78.735 | 26.415 | 81.379 |
+
+rustPFM was approximately 3–8× faster in these buffered file-read cases, with
+both trial orders agreeing on direction. The 2048² RGB case took about 26.5 ms
+versus 79–81 ms. These are observed medians, not confidence intervals or a claim
+about every zune-ppm API, platform or input. In particular, loading the entire
+file first and decoding a memory cursor is a different, unmeasured path.
+This result does not change the earlier finding that justPFM is faster on most
+of its measured workloads.

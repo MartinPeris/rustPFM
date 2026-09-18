@@ -58,6 +58,6 @@ layout, streaming, memory, and filesystem details.
 
 ## Further reading
 
-- [Benchmarks against justPFM](https://github.com/MartinPeris/rustPFM/blob/main/BENCHMARKS.md): reproducible results, including workloads where Rust is slower.
+- [Benchmarks against justPFM and zune-ppm](https://github.com/MartinPeris/rustPFM/blob/main/BENCHMARKS.md): reproducible results, including workloads where Rust is slower.
 - [Contributing and quality checks](https://github.com/MartinPeris/rustPFM/blob/main/CONTRIBUTING.md): commit hook, CI, 95% line-coverage gate, and interoperability.
 - [Design and limitations](https://github.com/MartinPeris/rustPFM/blob/main/DESIGN.md), [changelog](https://github.com/MartinPeris/rustPFM/blob/main/CHANGELOG.md), and [release procedure](https://github.com/MartinPeris/rustPFM/blob/main/RELEASING.md).
