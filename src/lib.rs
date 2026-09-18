@@ -1,10 +1,10 @@
-//! A lightweight Portable Float Map (PFM) codec for Rust.
-//!
-//! This crate is an initial scaffold. Encoding, decoding, and image types are
-//! not implemented yet. It has no dependencies and is not published on crates.io.
-//!
-//! The planned core uses owned `Vec<f32>` pixels, borrowed slices for encoding,
-//! and standard-library I/O. Array-library integrations will remain optional.
-
+//! Lightweight Portable Float Map images with a dependency-free core.
+//! See the repository documentation for release status and conventions.
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+mod error;
+mod image;
+pub use error::{Error, Result};
+pub use image::{
+    ByteOrder, ColorType, DecodeOptions, EncodeOptions, Header, Image, ImageView, ScaleMode,
+};
