@@ -13,3 +13,10 @@ cargo test --locked --all-features
 cargo llvm-cov --locked --all-features --lib --tests --fail-under-lines 95 --ignore-filename-regex '(^|/)(tests|benches)/'
 RUSTDOCFLAGS="${RUSTDOCFLAGS:-} -D warnings" cargo doc --locked --no-deps --all-features
 cargo package --locked --allow-dirty
+
+# Benchmark competitors live in an isolated package; verify correctness, never speed.
+cargo fmt --manifest-path benchmarks/rust-codecs/Cargo.toml -- --check
+cargo clippy --locked --manifest-path benchmarks/rust-codecs/Cargo.toml -- -D warnings
+benchmark_smoke=$(mktemp)
+trap 'rm -f -- "$benchmark_smoke"' EXIT
+python3 benchmarks/compare_rust.py --sizes 2 8 --repeats 1 --warmup 1 --output "$benchmark_smoke"

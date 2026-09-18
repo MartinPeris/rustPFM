@@ -1,0 +1,14 @@
+[package]
+name = "rustpfm-codec-comparison"
+version = "0.0.0"
+edition = "2024"
+rust-version = "1.85"
+publish = false
+
+# A separate package keeps competitors out of rustPFM's dependency graph.
+[workspace]
+
+[dependencies]
+rustpfm = { path = "../.." }
+zune-ppm = "=0.5.1"
+zune-core = { version = "=0.5.1", features = ["std"] }
