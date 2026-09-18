@@ -13,6 +13,8 @@ pub use image::{
 mod decode;
 pub use decode::{decode, decode_reader};
 
+#[cfg(feature = "ndarray")]
+mod arrays;
 pub use encode::{encode, encode_writer};
 pub use files::{read_pfm, write_pfm};
 #[cfg(feature = "ndarray")]
