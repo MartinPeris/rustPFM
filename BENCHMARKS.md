@@ -43,5 +43,53 @@ first comparison.
 
 ## Recorded results
 
-The first release's raw results and interpretation will be recorded after the
-integrated codec passes correctness checks, on an otherwise idle machine.
+Measured on 2026-09-18 UTC, AMD Ryzen 9 7940HS, Linux x86-64, local ext4/NVMe,
+Rust 1.98.1 default release profile, Python 3.12, NumPy 2.2.6 and justPFM 1.2.1.
+The clean measured commit was `1f9d02ba881c3bce1ae1083f8a380b4f84e99337`
+(version `0.1.0-dev`), including the integrated codec and EOF retry fix. Other
+project builds/tests were paused for both runs; the ordinary OS environment was
+not isolated. This is one machine, not a cross-platform performance guarantee.
+
+Raw data: [first trial](benchmarks/results/2026-09-18-linux.json) and
+[reversed-order trial](benchmarks/results/2026-09-18-linux-reversed.json).
+Reproduce the second trial by adding `--reverse-order` and a separate `--output`.
+Each cell below is the median of five calls in milliseconds; smaller is better.
+
+| Size | Channels | Operation | Scale | Rust | Python | Rust reversed | Python reversed |
+| --- | --- | --- | --- | ---: | ---: | ---: | ---: |
+
+| 1024² | 1 | read | 1 | 0.814 | 1.213 | 0.754 | 1.253 |
+| 1024² | 1 | read | 2 | 0.791 | 1.297 | 0.807 | 1.256 |
+| 1024² | 1 | write | 1 | 4.477 | 1.723 | 4.567 | 1.735 |
+| 1024² | 1 | write | 2 | 4.476 | 1.751 | 4.522 | 1.711 |
+| 1024² | 3 | read | 1 | 3.147 | 2.519 | 3.094 | 2.528 |
+| 1024² | 3 | read | 2 | 3.077 | 2.869 | 3.358 | 3.025 |
+| 1024² | 3 | write | 1 | 10.975 | 5.435 | 11.654 | 5.640 |
+| 1024² | 3 | write | 2 | 11.130 | 5.390 | 11.591 | 5.431 |
+| 2048² | 1 | read | 1 | 4.691 | 3.674 | 4.610 | 3.142 |
+| 2048² | 1 | read | 2 | 4.695 | 3.485 | 4.766 | 3.689 |
+| 2048² | 1 | write | 1 | 16.727 | 6.773 | 16.468 | 6.812 |
+| 2048² | 1 | write | 2 | 16.455 | 6.736 | 18.948 | 8.298 |
+| 2048² | 3 | read | 1 | 30.231 | 8.447 | 30.046 | 10.183 |
+| 2048² | 3 | read | 2 | 30.151 | 10.086 | 29.652 | 10.187 |
+| 2048² | 3 | write | 1 | 37.459 | 17.705 | 41.205 | 18.983 |
+| 2048² | 3 | write | 2 | 35.871 | 19.031 | 36.107 | 18.163 |
+
+**The initial Rust implementation is not generally faster than justPFM.** It wins
+1024² grayscale reads here, but justPFM wins larger reads and every measured
+write. For the 48 MiB RGB case at scale 1, Rust reads took about 30 ms versus
+8–10 ms for justPFM; Rust writes took 37–41 ms versus 18–19 ms. Reversing worker
+order preserved the direction of those differences. These are observed medians,
+not statistical confidence intervals or universal speed ratios.
+
+The 48 MiB RGB workers recorded roughly 98 MiB Rust and 313 MiB Python peak RSS.
+These totals include different validation allocations and runtime overhead, so
+they **do not establish a per-call codec memory advantage**. The JSON retains
+all case-specific measurements and the limitations above apply.
+
+The dependency-free core, safe Rust and bounded streaming scratch are useful
+properties independently of speed. Follow-up profiling should investigate sample
+conversion, output initialization, row traversal and file I/O granularity before
+choosing optimizations. None of these candidate explanations has been established
+as the bottleneck by this benchmark. Preserve these results as the initial
+baseline and rerun both trial orders after any optimization.
