@@ -92,3 +92,66 @@ conversion, output initialization, row traversal and file I/O granularity before
 choosing optimizations. None of these candidate explanations has been established
 as the bottleneck by this benchmark. Preserve these results as the initial
 baseline and rerun both trial orders after any optimization.
+
+## Rust comparison: zune-ppm
+
+A separate runner compares file reads with
+[zune-ppm 0.5.1](https://docs.rs/zune-ppm/0.5.1/zune_ppm/), using pinned
+zune-core 0.5.1 with its `std` feature. These dependencies live in a separate
+benchmark package and do not enter rustPFM's library dependency graph.
+
+```bash
+python3 benchmarks/compare_rust.py --sizes 1024 2048 --repeats 5 --warmup 2 \
+  --output benchmarks/results/rust-local.json
+python3 benchmarks/compare_rust.py --sizes 1024 2048 --repeats 5 --warmup 2 \
+  --reverse-order --output benchmarks/results/rust-local-reversed.json
+```
+
+Only the Python standard library and Rust toolchain are needed. Both codecs
+are compiled together with the default release profile and measured in separate,
+serial workers. File opening, buffered decoding, allocation, output extraction
+and file closing are timed; independent fixture generation, startup, validation
+and result disposal are excluded. Every returned sample, dimension and channel
+count is checked against the nonuniform input. One validation call and two
+warmups precede five samples; order alternates and the second trial reverses it.
+The local/CI quality harness runs small correctness cases without timing gates.
+
+This comparison covers little-endian, scale-1 grayscale/RGB files with even
+square dimensions. zune-ppm does not encode PFM, ignores scale magnitude, and
+its 0.5.1 row-flip implementation does not handle odd heights correctly, so
+writes, nonunit scales and odd heights are deliberately excluded. Its
+[decoder source](https://docs.rs/crate/zune-ppm/0.5.1/source/src/decoder.rs)
+documents the implementation used. Both return contiguous top-first float32
+pixels, but their validation guarantees differ: rustPFM also checks the exact
+payload length and rejects trailing data. zune-ppm is used with a standard
+`BufReader<File>`; rustPFM uses its public `read_pfm` API. This measures those
+file-read paths, not every possible buffering or in-memory configuration.
+
+Raw JSON records pinned dependency versions, source/binary hashes, compiler,
+Git state, host/storage information, all samples and process peak RSS. The
+warm-cache and RSS limitations described above apply; these results should not
+be combined with older justPFM trials as if all libraries ran simultaneously.
+
+### Recorded Rust results
+
+Measured on 2026-09-18 UTC on the same Ryzen 9 7940HS Linux/ext4 host,
+Rust 1.98.1, clean commit `ceca8888354ee842aa3618572a62e8f630a2fc98`.
+No other project builds or tests ran during measurement; the OS was not isolated.
+Raw data: [first trial](benchmarks/results/2026-09-18-zune.json) and
+[reversed-order trial](benchmarks/results/2026-09-18-zune-reversed.json).
+Each value is the median of five calls in milliseconds; smaller is better.
+
+| Size | Channels | rustPFM | zune-ppm | rustPFM reversed | zune-ppm reversed |
+| --- | --- | ---: | ---: | ---: | ---: |
+| 1024² | 1 | 0.728 | 5.386 | 0.680 | 5.401 |
+| 1024² | 3 | 2.842 | 15.994 | 2.833 | 15.999 |
+| 2048² | 1 | 4.483 | 21.464 | 4.606 | 21.324 |
+| 2048² | 3 | 26.539 | 78.735 | 26.415 | 81.379 |
+
+rustPFM was approximately 3–8× faster in these buffered file-read cases, with
+both trial orders agreeing on direction. The 2048² RGB case took about 26.5 ms
+versus 79–81 ms. These are observed medians, not confidence intervals or a claim
+about every zune-ppm API, platform or input. In particular, loading the entire
+file first and decoding a memory cursor is a different, unmeasured path.
+This result does not change the earlier finding that justPFM is faster on most
+of its measured workloads.
