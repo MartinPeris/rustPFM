@@ -9,16 +9,60 @@ permissions:
   contents: read
 
 jobs:
-  quality:
-    name: Quality gate
+  harness:
+    name: Complete quality harness
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           persist-credentials: false
-      - name: Install stable Rust
+      - name: Install stable Rust and quality tools
         run: |
-          rustup toolchain install stable --profile minimal --component rustfmt --component clippy
+          rustup toolchain install stable --profile minimal
           rustup default stable
-      - name: Run quality checks
+          ./scripts/install-quality-tools.sh
+      - name: Run local and CI quality checks
         run: ./scripts/check.sh
+  compatibility:
+    name: Rust ${{ matrix.rust }} / ${{ matrix.features }}
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        rust: ['1.85.0', stable]
+        features: ['--no-default-features', '--all-features']
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install Rust
+        run: rustup toolchain install '${{ matrix.rust }}' --profile minimal
+      - name: Test supported configuration
+        run: cargo +${{ matrix.rust }} test --locked ${{ matrix.features }}
+  interoperability:
+    name: Independent Netpbm interoperability
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+      - name: Install independent converter
+        run: sudo apt-get update && sudo apt-get install -y netpbm
+      - name: Reproduce independent fixtures
+        run: python3 tests/fixtures/netpbm/generate.py --check
+      - name: Decode rustPFM output with Netpbm
+        run: cargo test --locked --no-default-features --test netpbm -- --ignored
+      - name: Check codec against fixtures
+        run: cargo test --locked --no-default-features --test codec independent_netpbm_fixtures
+  quality:
+    name: Quality gate
+    if: always()
+    needs: [harness, compatibility, interoperability]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Require all checks
+        env:
+          HARNESS: ${{ needs.harness.result }}
+          COMPATIBILITY: ${{ needs.compatibility.result }}
+          INTEROPERABILITY: ${{ needs.interoperability.result }}
+        run: test "$HARNESS" = success && test "$COMPATIBILITY" = success && test "$INTEROPERABILITY" = success
