@@ -1,5 +1,4 @@
-//! Lightweight Portable Float Map images with a dependency-free core.
-//! See the repository documentation for release status and conventions.
+#![doc = include_str!("../README.md")]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 mod encode;
@@ -18,5 +17,3 @@ pub use decode::{decode, decode_reader};
 mod arrays;
 pub use encode::{encode, encode_writer};
 pub use files::{read_pfm, write_pfm};
-#[cfg(feature = "ndarray")]
-mod arrays;
