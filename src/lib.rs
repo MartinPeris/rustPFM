@@ -2,7 +2,9 @@
 //! See the repository documentation for release status and conventions.
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
+mod encode;
 mod error;
+mod files;
 mod image;
 pub use error::{Error, Result};
 pub use image::{
@@ -14,3 +16,5 @@ pub use decode::{decode, decode_reader};
 
 #[cfg(feature = "ndarray")]
 mod arrays;
+pub use encode::{encode, encode_writer};
+pub use files::{read_pfm, write_pfm};
