@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+root=$(git rev-parse --show-toplevel)
+cd "$root"
+snapshot=$(mktemp -d "${TMPDIR:-/tmp}/rustpfm-staged.XXXXXX")
+trap 'rm -rf -- "$snapshot"' EXIT
+# Archive the index, including newly staged files, without touching the checkout.
+git archive "$(git write-tree)" | tar -x -C "$snapshot"
+cd "$snapshot"
+./scripts/check.sh
