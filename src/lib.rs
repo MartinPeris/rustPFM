@@ -1,5 +1,4 @@
-//! Lightweight Portable Float Map images with a dependency-free core.
-//! See the repository documentation for release status and conventions.
+#![doc = include_str!("../README.md")]
 #![forbid(unsafe_code)]
 #![warn(missing_docs)]
 mod encode;

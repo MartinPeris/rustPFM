@@ -2,6 +2,11 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 cargo fmt --all -- --check
+# Keep the default published library and its build free of third-party crates.
+if [ "$(cargo tree --locked --no-default-features --edges normal,build --prefix none | wc -l)" -ne 1 ]; then
+    echo "Default runtime/build dependencies must remain empty" >&2
+    exit 1
+fi
 cargo clippy --locked --all-targets --all-features -- -D warnings
 cargo test --locked --no-default-features
 cargo test --locked --all-features
