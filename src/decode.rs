@@ -132,8 +132,13 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
         }
     }
     let mut extra = [0u8; 1];
-    if reader.read(&mut extra)? != 0 {
-        return Err(Error::Invalid("trailing bytes after pixel payload"));
+    loop {
+        match reader.read(&mut extra) {
+            Ok(0) => break,
+            Ok(_) => return Err(Error::Invalid("trailing bytes after pixel payload")),
+            Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+            Err(error) => return Err(error.into()),
+        }
     }
     Ok(Image::from_decoded(
         Header {
