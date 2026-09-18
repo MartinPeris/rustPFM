@@ -57,7 +57,6 @@ Each cell below is the median of five calls in milliseconds; smaller is better.
 
 | Size | Channels | Operation | Scale | Rust | Python | Rust reversed | Python reversed |
 | --- | --- | --- | --- | ---: | ---: | ---: | ---: |
-
 | 1024² | 1 | read | 1 | 0.814 | 1.213 | 0.754 | 1.253 |
 | 1024² | 1 | read | 2 | 0.791 | 1.297 | 0.807 | 1.256 |
 | 1024² | 1 | write | 1 | 4.477 | 1.723 | 4.567 | 1.735 |
