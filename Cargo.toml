@@ -2,6 +2,7 @@
 name = "rustpfm"
 version = "0.1.0-dev"
 edition = "2024"
+rust-version = "1.85"
 description = "A lightweight Portable Float Map image codec for Rust (work in progress)"
 license = "MIT"
 readme = "README.md"

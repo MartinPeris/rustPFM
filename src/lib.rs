@@ -8,3 +8,6 @@ pub use error::{Error, Result};
 pub use image::{
     ByteOrder, ColorType, DecodeOptions, EncodeOptions, Header, Image, ImageView, ScaleMode,
 };
+
+mod decode;
+pub use decode::{decode, decode_reader};

@@ -95,6 +95,9 @@ pub struct Image {
     pixels: Vec<f32>,
 }
 impl Image {
+    pub(crate) fn from_decoded(header: Header, pixels: Vec<f32>) -> Self {
+        Self { header, pixels }
+    }
     /// Validate dimensions and exact sample count without copying the vector.
     pub fn new(
         width: usize,
