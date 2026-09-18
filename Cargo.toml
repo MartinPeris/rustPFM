@@ -13,4 +13,9 @@ categories = ["multimedia::images", "encoding"]
 publish = false
 include = ["src/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE"]
 
+[features]
+default = []
+ndarray = ["dep:ndarray"]
+
 [dependencies]
+ndarray = { version = "0.16.1", optional = true, default-features = false, features = ["std"] }
