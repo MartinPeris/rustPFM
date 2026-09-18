@@ -16,3 +16,5 @@ pub use decode::{decode, decode_reader};
 
 pub use encode::{encode, encode_writer};
 pub use files::{read_pfm, write_pfm};
+#[cfg(feature = "ndarray")]
+mod arrays;
