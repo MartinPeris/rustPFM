@@ -195,3 +195,30 @@ fn special_pixel_bits_are_preserved_without_scaling() {
         );
     }
 }
+
+#[test]
+fn retries_interrupted_eof_probe() {
+    struct InterruptedEof {
+        cursor: Cursor<Vec<u8>>,
+        interrupted: bool,
+    }
+    impl Read for InterruptedEof {
+        fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
+            if self.cursor.position() == self.cursor.get_ref().len() as u64 && !self.interrupted {
+                self.interrupted = true;
+                return Err(io::ErrorKind::Interrupted.into());
+            }
+            self.cursor.read(output)
+        }
+    }
+    let reader = InterruptedEof {
+        cursor: Cursor::new(fixture(ByteOrder::Little, 1.0)),
+        interrupted: false,
+    };
+    assert_eq!(
+        decode_reader(BufReader::new(reader), DecodeOptions::default())
+            .unwrap()
+            .pixels(),
+        &[1., 2., 3., 4., 5., 6.]
+    );
+}
