@@ -1,8 +1,9 @@
 [package]
 name = "rustpfm"
-version = "0.1.0-dev"
+version = "0.1.0"
 edition = "2024"
-description = "A lightweight Portable Float Map image codec for Rust (work in progress)"
+rust-version = "1.85"
+description = "A lightweight Portable Float Map image codec with a dependency-free core"
 license = "MIT"
 readme = "README.md"
 repository = "https://github.com/MartinPeris/rustPFM"
@@ -10,6 +11,11 @@ keywords = ["pfm", "image", "depth", "float"]
 categories = ["multimedia::images", "encoding"]
 # Remove only when the codec, compatibility policy, and release checks are ready.
 publish = false
-include = ["src/**", "Cargo.toml", "Cargo.lock", "README.md", "LICENSE"]
+include = ["src/**", "tests/**", "examples/**", "benchmarks/**", "Cargo.toml", "Cargo.lock", "README.md", "API.md", "DESIGN.md", "CHANGELOG.md", "CONTRIBUTING.md", "RELEASING.md", "BENCHMARKS.md", "scripts/**", "LICENSE"]
+
+[features]
+default = []
+ndarray = ["dep:ndarray"]
 
 [dependencies]
+ndarray = { version = "0.16.1", optional = true, default-features = false, features = ["std"] }
