@@ -81,7 +81,7 @@ They are not the range of individual samples or statistical error bars.
 | 2048² | 3 | write | 1 | 35.001–35.628 | 27.808–27.847 | 16.744–23.543 |
 | 2048² | 3 | write | 2 | 35.989–36.530 | 27.815–27.828 | 17.275–18.269 |
 
-Writes improved across all measured cases, with roughly 20–52% lower latency
+Writes improved across all measured cases, with roughly 20–53% lower latency
 when matching trial order. For scale-1 2048² RGB, writes improved from 35–36 ms
 to about 28 ms. Smaller reads also improved; 2048² RGB scale-1 reads remain
 roughly 29 ms. **justPFM still wins most workloads**, especially large RGB
