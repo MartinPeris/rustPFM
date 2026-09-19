@@ -75,16 +75,30 @@ fn write_pixels<W: Write>(
 ) -> Result<()> {
     let row_samples = view.width() * view.color_type().channels();
     let mut scratch = [0_u8; CHUNK_BYTES];
+    let mut used = 0;
     for row in view.pixels().chunks_exact(row_samples).rev() {
-        for chunk in row.chunks(CHUNK_BYTES / 4) {
-            for (sample, bytes) in chunk.iter().zip(scratch.chunks_exact_mut(4)) {
+        let mut remaining = row;
+        while !remaining.is_empty() {
+            let count = remaining.len().min((CHUNK_BYTES - used) / 4);
+            let (chunk, rest) = remaining.split_at(count);
+            let end = used + count * 4;
+            for (sample, bytes) in chunk.iter().zip(scratch[used..end].chunks_exact_mut(4)) {
                 bytes.copy_from_slice(&match options.byte_order {
                     ByteOrder::Little => sample.to_le_bytes(),
                     ByteOrder::Big => sample.to_be_bytes(),
                 });
             }
-            writer.write_all(&scratch[..chunk.len() * 4])?;
+            used = end;
+            remaining = rest;
+            // Fill across row boundaries instead of issuing one write per row.
+            if used == CHUNK_BYTES {
+                writer.write_all(&scratch)?;
+                used = 0;
+            }
         }
+    }
+    if used != 0 {
+        writer.write_all(&scratch[..used])?;
     }
     Ok(())
 }

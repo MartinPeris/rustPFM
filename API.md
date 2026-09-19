@@ -30,7 +30,7 @@ payloads and overflow/underflow just like other float32 arithmetic.
 - `decode_reader(impl BufRead, DecodeOptions)`: consume a single image and require
   end-of-stream. A final byte probe rejects trailing data; on a live stream it
   may wait for EOF. It cannot preflight the total size before pixel allocation.
-- `read_pfm(path, DecodeOptions)`: use a buffered file and preflight its size
+- `read_pfm(path, DecodeOptions)`: use a 64 KiB buffered file and preflight its size
   before pixel allocation. Do not modify the file concurrently while reading.
 
 The header has exactly three newline-terminated lines: `Pf`/`PF`, width and

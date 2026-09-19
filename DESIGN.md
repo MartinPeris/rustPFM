@@ -38,8 +38,9 @@ nonunit-scale files across implementations.
 
 ## Follow-up work
 
-- Profile large-image decoding and writing against the recorded justPFM baseline
-  before selecting optimizations, buffer changes, SIMD, or parallelism.
+- Continue investigating large-image allocation/initialization costs after the
+  measured I/O batching improvements; retain safe Rust and fallible pixel-buffer
+  reservation. See the profiling notes in BENCHMARKS.md.
 - Extend long-running coverage-guided fuzzing; deterministic randomized tests
   are not an exhaustive fuzz campaign.
 - Validate native Windows/macOS permissions, symlinks, rename and cleanup behavior.
