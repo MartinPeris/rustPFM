@@ -242,6 +242,14 @@ fn row_and_buffer_boundaries_match_independent_wire_bytes() {
                     },
                 )
                 .unwrap();
+                let scaled = rustpfm::decode(&expected, rustpfm::DecodeOptions::default()).unwrap();
+                for (&actual, &original) in scaled.pixels().iter().zip(&samples) {
+                    if original.is_nan() {
+                        assert!(actual.is_nan());
+                    } else {
+                        assert_eq!(actual.to_bits(), (original * 2.0).to_bits());
+                    }
+                }
                 assert_eq!(
                     decoded
                         .pixels()

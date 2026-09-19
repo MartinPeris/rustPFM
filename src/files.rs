@@ -15,11 +15,7 @@ static TEMP_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 pub fn read_pfm<P: AsRef<Path>>(path: P, options: DecodeOptions) -> Result<Image> {
     let file = File::open(path)?;
     let total_len = file.metadata()?.len();
-    crate::decode::decode_reader_sized(
-        BufReader::with_capacity(64 * 1024, file),
-        options,
-        Some(total_len),
-    )
+    crate::decode::decode_reader_sized(BufReader::new(file), options, Some(total_len))
 }
 
 /// Encode an image and atomically replace a filesystem entry.

@@ -64,7 +64,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .nth(2)
         .map(|value| value.parse::<usize>())
         .transpose()?
-        .unwrap_or(64 * 1024);
+        .unwrap_or(8 * 1024);
     if capacity == 0 {
         return Err("read buffer must be positive".into());
     }

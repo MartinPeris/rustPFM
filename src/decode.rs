@@ -111,16 +111,26 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
     let row_samples = width * color_type.channels();
     let mut buffer = [0u8; 64 * 1024];
     let apply_scale = options.scale_mode == ScaleMode::Apply && scale != 1.0;
+    let mut unread = payload_bytes;
+    let mut available = &buffer[..0];
     for row in pixels.chunks_exact_mut(row_samples).rev() {
-        for chunk in row.chunks_mut(buffer.len() / 4) {
-            let bytes = &mut buffer[..chunk.len() * 4];
-            if let Err(error) = reader.read_exact(bytes) {
-                return if error.kind() == io::ErrorKind::UnexpectedEof {
-                    Err(Error::Invalid("truncated pixel payload"))
-                } else {
-                    Err(error.into())
-                };
+        let mut remaining = row;
+        while !remaining.is_empty() {
+            if available.is_empty() {
+                let count = unread.min(buffer.len());
+                if let Err(error) = reader.read_exact(&mut buffer[..count]) {
+                    return if error.kind() == io::ErrorKind::UnexpectedEof {
+                        Err(Error::Invalid("truncated pixel payload"))
+                    } else {
+                        Err(error.into())
+                    };
+                }
+                unread -= count;
+                available = &buffer[..count];
             }
+            let count = remaining.len().min(available.len() / 4);
+            let (chunk, rest) = remaining.split_at_mut(count);
+            let (bytes, buffered) = available.split_at(count * 4);
             for (pixel, encoded) in chunk.iter_mut().zip(bytes.chunks_exact(4)) {
                 let bits = [encoded[0], encoded[1], encoded[2], encoded[3]];
                 let value = match byte_order {
@@ -129,6 +139,8 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
                 };
                 *pixel = if apply_scale { value * scale } else { value };
             }
+            remaining = rest;
+            available = buffered;
         }
     }
     let mut extra = [0u8; 1];

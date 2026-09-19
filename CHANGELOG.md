@@ -11,6 +11,6 @@
 - Add independent Netpbm fixtures and live interoperability, malformed-input and
   deterministic randomized tests, and a 95% library line-coverage gate in the
   shared local/CI harness.
-- Batch serialized rows into 64 KiB writes and use a 64 KiB file-read buffer.
+- Batch reads and writes across row boundaries using the existing 64 KiB scratch.
 - Record reproducible comparisons with justPFM and zune-ppm, including current performance
   limitations, and explain the justPFM → rustPFM name.
