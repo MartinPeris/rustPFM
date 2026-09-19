@@ -1,8 +1,9 @@
 # Performance regression gate
 
-`./scripts/check.sh` ends with `python3 benchmarks/check_regression.py`.
-The pre-commit hook runs it against the **staged snapshot**, and CI runs the same
-command as part of the existing required Quality gate. No Python packages or
+`./scripts/check.sh` ends with `python3 benchmarks/check_regression.py` locally.
+The pre-commit hook runs it against the **staged snapshot**. On GitHub Actions
+(`GITHUB_ACTIONS=true`), the harness skips timing comparisons and runs only the
+deterministic regression-detector unit tests alongside the other quality checks. No Python packages or
 Rust runtime dependencies are added. Linux, Python 3, Git history and the normal
 Rust toolchain are required.
 
@@ -23,15 +24,16 @@ the timer, warms up twice, and returns seven measured samples.
 A case fails only when its candidate median exceeds the baseline by **both 20%
 and 0.2 ms in all three paired trials**. Equality at a limit passes. One or two
 exceeding trials produce a warning, not a failure. Malformed/missing timings,
-missing baseline history, compilation failures and worker failures fail closed.
+missing baseline history, compilation failures and worker failures fail closed
+in the local performance check.
 These are practical confirmation rules, not statistical confidence intervals.
 The absolute floor deliberately tolerates small absolute changes even when
 their relative percentage is large.
 
 Baseline and candidate run serially on the same host with warm files. Builds
 finish before timing begins. Run on an otherwise idle machine: repeated host
-contention, thermal drift and noisy shared CI runners can still cause false
-alerts. No cross-machine absolute timing threshold is used. The test does not
+contention and thermal drift can still cause false alerts locally. Shared-runner
+noise is why timing comparisons are excluded from CI. No cross-machine absolute timing threshold is used. The test does not
 measure cold storage, durable writes (`fsync`), every byte order/layout, or
 performance on other operating systems.
 
@@ -49,20 +51,18 @@ reports are retained in the original checkout's `target/performance/`, outside
 the disposable staged snapshot. Each run replaces the previous report.
 Use `--output /path/report.json` to retain additional runs.
 
-CI adds the table to its job summary, emits error annotations for confirmed
-regressions (warnings for unconfirmed changes), and uploads available reports
-as the `performance-report` artifact for 30 days, including failed runs.
-A failure before the benchmark starts may have no performance artifact.
-Notifications follow the user's normal GitHub Actions notification settings;
-no email, Slack or other external notification integration is configured.
+CI does not run this timing gate, create timing alerts or upload performance
+artifacts. Correctness, coverage, safety and detector unit tests remain in CI.
+The standalone runner can still produce GitHub summaries/annotations if invoked
+manually there, but no repository workflow invokes it.
 
 On an alert, inspect the affected cases and samples, then rerun on an idle host.
 Investigate sustained regressions before merging. Do not rerun selectively
 until a noisy failure disappears or loosen the policy just to obtain a pass.
-The pre-commit hook can be bypassed like any Git hook; CI is the independent
-check. `--repository /path/to/clone` supplies baseline history when testing an
+The pre-commit hook can be bypassed like any Git hook. CI independently checks
+correctness and quality, but does not enforce the timing threshold. `--repository /path/to/clone` supplies baseline history when testing an
 exported source snapshot. Shallow clones must fetch the baseline history first
-(for example, `git fetch --unshallow origin`); CI checks out full history.
+(for example, `git fetch --unshallow origin`); CI needs no baseline history because it skips timing comparisons.
 
 ## Updating the baseline
 

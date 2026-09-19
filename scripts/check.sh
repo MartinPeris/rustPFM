@@ -24,6 +24,10 @@ python3 benchmarks/compare_rust.py --sizes 2 8 --repeats 1 --warmup 1 --row-orde
 
 ./scripts/check-safety.sh
 
-# Paired timing gate against the reviewed, pinned fast revision.
+# Detector logic runs everywhere; wall-clock regression checks stay local.
 python3 -m unittest discover -s benchmarks -p test_regression.py
-python3 benchmarks/check_regression.py
+if [[ "${GITHUB_ACTIONS:-}" == "true" ]]; then
+    echo "Skipping performance timing gate on GitHub Actions; detector unit tests passed."
+else
+    python3 benchmarks/check_regression.py
+fi

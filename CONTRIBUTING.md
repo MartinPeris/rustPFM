@@ -14,8 +14,10 @@ a zero-default-dependency check, Clippy with warnings denied, unit/integration/d
 disabled and all features enabled, a **95% library line coverage gate**, rustdoc with warnings
 denied, `cargo package` with compilation verification, and the Miri safety checks
 in `scripts/check-safety.sh`, followed by a paired performance regression gate
-against a pinned fast revision. A slowdown above both 20% and 0.2 ms in all
-three paired trials fails locally and in CI; partial confirmation warns. See
+against a pinned fast revision when run locally. A slowdown above both 20% and
+0.2 ms in all three paired trials fails locally; partial confirmation warns.
+GitHub Actions skips timing comparisons and runs only the detector unit tests
+alongside the correctness, coverage and safety checks. See
 [the policy and report guide](benchmarks/REGRESSION.md). Cargo.lock is tracked
 so local and CI checks resolve the same dependencies. The default build has none. Package verification creates an archive locally; it does not publish it.
 
