@@ -47,7 +47,7 @@ pub enum RowOrder {
     /// Contiguous top-first storage, convenient for conventional image buffers.
     #[default]
     TopFirst,
-    /// PFM file order; avoids reversing rows after decoding.
+    /// PFM file order; permits a single contiguous payload read.
     BottomFirst,
 }
 /// Interpretation of the header scale while decoding.

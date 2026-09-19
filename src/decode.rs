@@ -3,7 +3,7 @@ use crate::{
     ByteOrder, ColorType, DecodeOptions, Error, Header, Image, Result, RowOrder, ScaleMode,
     image::sample_count,
 };
-use std::io::{self, BufRead, Cursor, Read};
+use std::io::{self, BufRead, Cursor, IoSliceMut, Read};
 
 const MAX_HEADER_LINE: u64 = 4096;
 
@@ -104,8 +104,12 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
         }
     }
     let mut pixels = crate::buffer::zeroed(count)?;
-    // Read the contiguous on-disk payload in one operation, then reverse rows.
-    if let Err(error) = reader.read_exact(crate::buffer::bytes_mut(&mut pixels)) {
+    let read = if options.row_order == RowOrder::BottomFirst {
+        reader.read_exact(crate::buffer::bytes_mut(&mut pixels))
+    } else {
+        read_top_first(&mut reader, &mut pixels, width * color_type.channels())
+    };
+    if let Err(error) = read {
         return if error.kind() == io::ErrorKind::UnexpectedEof {
             Err(Error::Invalid("truncated pixel payload"))
         } else {
@@ -136,7 +140,7 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
             Err(error) => return Err(error.into()),
         }
     }
-    let mut image = Image::from_decoded(
+    let image = Image::from_decoded(
         Header {
             width,
             height,
@@ -145,8 +149,43 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
             byte_order,
         },
         pixels,
-        RowOrder::BottomFirst,
+        options.row_order,
     );
-    image.set_row_order(options.row_order);
     Ok(image)
+}
+
+// Scatter the file's bottom-first rows directly into final top-first positions.
+// Mutable chunks are disjoint; byte views borrow them only for this batch.
+fn read_top_first<R: Read>(
+    reader: &mut R,
+    pixels: &mut [f32],
+    row_samples: usize,
+) -> io::Result<()> {
+    let mut chunks = pixels
+        .chunks_exact_mut(row_samples)
+        .rev()
+        .flat_map(|row| row.chunks_mut(16 * 1024));
+    loop {
+        let mut slices: [IoSliceMut<'_>; 64] = std::array::from_fn(|_| IoSliceMut::new(&mut []));
+        let mut count = 0;
+        for slot in &mut slices {
+            let Some(chunk) = chunks.next() else {
+                break;
+            };
+            *slot = IoSliceMut::new(crate::buffer::bytes_mut(chunk));
+            count += 1;
+        }
+        if count == 0 {
+            return Ok(());
+        }
+        let mut pending = &mut slices[..count];
+        while !pending.is_empty() {
+            match reader.read_vectored(pending) {
+                Ok(0) => return Err(io::ErrorKind::UnexpectedEof.into()),
+                Ok(read) => IoSliceMut::advance_slices(&mut pending, read),
+                Err(error) if error.kind() == io::ErrorKind::Interrupted => continue,
+                Err(error) => return Err(error),
+            }
+        }
+    }
 }

@@ -2,7 +2,7 @@
 use rustpfm::{ColorType, DecodeOptions, EncodeOptions, Image, decode_reader, encode_writer};
 use std::{
     fs::File,
-    io::{self, BufReader, Read, Write},
+    io::{self, BufReader, IoSlice, IoSliceMut, Read, Write},
     time::{Duration, Instant},
 };
 
@@ -25,6 +25,14 @@ impl<T> Meter<T> {
     }
 }
 impl<T: Read> Read for Meter<T> {
+    fn read_vectored(&mut self, output: &mut [IoSliceMut<'_>]) -> io::Result<usize> {
+        let start = Instant::now();
+        let result = self.inner.read_vectored(output);
+        self.metrics.elapsed += start.elapsed();
+        self.metrics.calls += 1;
+        self.metrics.bytes += result.as_ref().copied().unwrap_or(0);
+        result
+    }
     fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
         let start = Instant::now();
         let result = self.inner.read(output);
@@ -35,6 +43,14 @@ impl<T: Read> Read for Meter<T> {
     }
 }
 impl<T: Write> Write for Meter<T> {
+    fn write_vectored(&mut self, input: &[IoSlice<'_>]) -> io::Result<usize> {
+        let start = Instant::now();
+        let result = self.inner.write_vectored(input);
+        self.metrics.elapsed += start.elapsed();
+        self.metrics.calls += 1;
+        self.metrics.bytes += result.as_ref().copied().unwrap_or(0);
+        result
+    }
     fn write(&mut self, input: &[u8]) -> io::Result<usize> {
         let start = Instant::now();
         let result = self.inner.write(input);

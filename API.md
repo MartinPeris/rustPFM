@@ -13,7 +13,7 @@ red/green/blue channels. Pixels are contiguous, native-endian `f32`. Both
 constructors interpret input as top-first.
 
 `DecodeOptions::row_order` selects physical storage: `RowOrder::TopFirst` is the
-default; `RowOrder::BottomFirst` keeps PFM file order and skips row reversal.
+default; `RowOrder::BottomFirst` keeps PFM file order and reads the payload contiguously.
 `ImageView::with_row_order(width, height, color_type, pixels, row_order)` borrows
 either layout without reordering it. `pixels()`, `pixels_mut()`, and
 `into_pixels()` expose physical storage, so check `row_order()` before treating
@@ -61,8 +61,9 @@ A grayscale pixel requires 4 bytes and RGB requires 12, excluding the input
 buffer, buffering, and application copies. This is not a total process memory
 limit. The codec checks sizes and allocates an initialized, zeroed pixel buffer
 through the global allocator, reporting a null allocation as `Error::Allocation`.
-It reads directly into that buffer, then converts byte order, applies scale,
-and reverses rows only when needed. Operating-system memory overcommit is not
+Default top-first reads scatter file rows directly to their final positions;
+bottom-first reads fill the buffer contiguously. Both then convert byte order
+and apply scale when needed. Operating-system memory overcommit is not
 controlled.
 
 The dependency-free `hugepages` feature is enabled by default. On Linux, decoding

@@ -13,7 +13,7 @@ build. It uses Rust's standard library; `no_std` is not an initial goal.
 - Direct decoding into initialized pixel storage; native-endian encoding borrows
   pixel bytes for bounded vectored writes, with a 64 KiB conversion fallback.
 - Sized file reads, atomic file replacement, and optional file-order storage
-  that avoids decoding row reversal.
+  that permits a single contiguous payload read.
 - Optional ndarray views and copying conversion from noncontiguous arrays.
 - Independent Netpbm fixtures, exact-byte expectations, deterministic randomized
   float-bit round trips, malformed-input stress tests, and live interoperability.

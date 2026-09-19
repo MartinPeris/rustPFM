@@ -248,3 +248,80 @@ fn direct_io_preserves_special_bits_in_both_storage_and_byte_orders() {
         }
     }
 }
+
+struct VectoredReader {
+    header: Cursor<Vec<u8>>,
+    payload: Cursor<Vec<u8>>,
+    calls: usize,
+    eof: bool,
+}
+impl BufRead for VectoredReader {
+    fn fill_buf(&mut self) -> io::Result<&[u8]> {
+        self.header.fill_buf()
+    }
+    fn consume(&mut self, count: usize) {
+        self.header.consume(count);
+    }
+}
+impl Read for VectoredReader {
+    fn read(&mut self, output: &mut [u8]) -> io::Result<usize> {
+        self.payload.read(output)
+    }
+    fn read_vectored(&mut self, outputs: &mut [std::io::IoSliceMut<'_>]) -> io::Result<usize> {
+        self.calls += 1;
+        if self.calls == 1 {
+            return Err(io::ErrorKind::Interrupted.into());
+        }
+        if self.eof {
+            return Ok(0);
+        }
+        let mut remaining = 11;
+        let mut read = 0;
+        for output in outputs {
+            let take = output.len().min(remaining);
+            // Decoder storage remains initialized even across partial float reads.
+            assert!(output[..take].iter().all(|&byte| byte == 0));
+            let actual = self.payload.read(&mut output[..take])?;
+            read += actual;
+            remaining -= actual;
+            if remaining == 0 || actual == 0 {
+                break;
+            }
+        }
+        Ok(read)
+    }
+}
+#[test]
+fn vectored_reads_retry_and_advance_across_row_and_batch_boundaries() {
+    let header = format!(
+        "Pf\n2 65\n{}2\n",
+        if native() == ByteOrder::Little {
+            "-"
+        } else {
+            ""
+        }
+    );
+    let mut payload = Vec::new();
+    for y in (0..65).rev() {
+        for x in 0..2 {
+            payload.extend_from_slice(&((y * 2 + x) as f32).to_ne_bytes());
+        }
+    }
+    let reader = |eof| VectoredReader {
+        header: Cursor::new(header.as_bytes().to_vec()),
+        payload: Cursor::new(payload.clone()),
+        calls: 0,
+        eof,
+    };
+    let mut successful = reader(false);
+    let image = decode_reader(&mut successful, DecodeOptions::default()).unwrap();
+    assert!(successful.calls > 3);
+    assert_eq!(
+        image.pixels(),
+        &(0..130).map(|i| (i * 2) as f32).collect::<Vec<_>>()
+    );
+    assert!(matches!(
+        decode_reader(reader(true), DecodeOptions::default()),
+        Err(Error::Invalid(_))
+    ));
+}
