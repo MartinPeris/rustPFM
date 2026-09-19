@@ -1,0 +1,374 @@
+{
+  "schema_version": 1,
+  "environment": {
+    "utc_timestamp": "2026-09-19T04:07:00.859983+00:00",
+    "git_revision": "fca8bd136aa2b99c8869c09c1a79a8c1478ca659",
+    "git_status": "",
+    "source_sha256": {
+      "Cargo.lock": "174d99f7f146a5cec955be122f649ef5694d31a8046a79c1dc1061354a932425",
+      "Cargo.toml": "cb3db573f32c5bd098bcc16e661a99edf3b76a032ca0467ba4f74ce00631bf66",
+      "benchmarks/compare.py": "dddee084c1ece38646e5eb8eb058b653b7833b4b9475514b34fcadc38fffac07",
+      "examples/benchmark.rs": "cb3e4d002714d3a229849902fd7dd2c2089294660991438c09ffbe067cf9393c",
+      "src/arrays.rs": "bc2a6c0c9ff12e0d0ad305063b4067087e74fc79876679c6b1241151ad4f8444",
+      "src/buffer.rs": "eeda7dec9e657ae3208ba69267dec4535ff721915f47078348cea24ee4c90255",
+      "src/decode.rs": "a7c8944a2e614963598335e447d2d4d448c64bcf6cd48ab196f076f622dcc5f7",
+      "src/encode.rs": "1b48e8947abc87999abb325ce94910fbfbd2d42c4568f4d51358abcd38971b71",
+      "src/error.rs": "60510f6b38d932e5a9dfd06142c671ddf518661d4046e1d41868c7504a47e3ce",
+      "src/files.rs": "1cbc777a6f4292c9f614d10e0f727a0f902dbb08a8b3177c5a463cd309db35d5",
+      "src/image.rs": "49df0017b363179a568486ccdabf7eed522ea026063155a77c104208a62ee17d",
+      "src/lib.rs": "f86db545a690c3fe831480cc48dbf8e67f725e3410088a6d5e38d567f578c245"
+    },
+    "binary_sha256": "ebbb8855dbc4993007c729fcd01e1d9872910cc66e64d8c0d12dc11486696c55",
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "numpy": "2.2.6",
+    "justpfm": "1.2.1",
+    "justpfm_source_sha256": "974090554209231fefcb623528a1f751f1ccd42049260220a85c7a64c745b814",
+    "os": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+    "cpu_model": "AMD Ryzen 9 7940HS w/ Radeon 780M Graphics",
+    "cpu_count": 16,
+    "cpu_affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "host_byte_order": "little",
+    "transparent_hugepage_policy": "always [madvise] never",
+    "numpy_madvise_hugepage": true,
+    "numpy_hugepage_env": null,
+    "rustpfm_row_order": "bottom",
+    "rustpfm_features": "default",
+    "load_average_before": [
+      2.71142578125,
+      1.67919921875,
+      1.6962890625
+    ],
+    "reverse_order": true,
+    "storage": "/dev/nvme0n1p2 ext4   rw,relatime",
+    "temp_dir": "/tmp",
+    "timing_policy": "Serial isolated workers; alternating library order per case. One validation call plus requested warmups. Timers include library call, allocation and scaling, exclude imports, process startup, fixture generation, validation and result disposal. Release Rust default optimization; no target-cpu override.",
+    "cache_policy": "Warm/cache-eligible, no cache eviction or fsync. Existing files are atomically replaced. This is not durable storage throughput.",
+    "memory_policy": "Linux process-lifetime peak RSS in KiB per isolated worker, includes runtime, input, output, validation buffers and all calls; excludes OS page cache. Not per-call allocations. Different runtimes and validation implementations make absolute RSS non-equivalent. No allocator instrumentation.",
+    "layout_policy": "Both receive contiguous top-first float32 input; little-endian files; grayscale and interleaved RGB. Rust returns contiguous owned pixels in the explicitly recorded rustpfm_row_order; justPFM returns a writable top-first negative-row-stride array. No extra Python contiguity conversion is timed."
+  },
+  "cases": [
+    {
+      "size": 1024,
+      "channels": 1,
+      "operation": "read",
+      "scale": 1.0,
+      "repeats": 5,
+      "warmup": 2,
+      "rustpfm_row_order": "bottom",
+      "worker_order": [
+        "justpfm",
+        "rustpfm"
+      ],
+      "payload_bytes": 4194304,
+      "justpfm": {
+        "samples_seconds": [
+          0.001285623002331704,
+          0.0012241099975653924,
+          0.0013122729942551814,
+          0.0012513500041677617,
+          0.0012113460034015588
+        ],
+        "process_peak_rss_kib": 61272,
+        "median_seconds": 0.0012513500041677617,
+        "payload_mib_per_second": 3196.5477178068095
+      },
+      "rustpfm": {
+        "samples_seconds": [
+          0.000458437,
+          0.000485396,
+          0.000453147,
+          0.000421258,
+          0.000396873
+        ],
+        "process_peak_rss_kib": 10464,
+        "median_seconds": 0.000453147,
+        "payload_mib_per_second": 8827.157633174224
+      }
+    },
+    {
+      "size": 1024,
+      "channels": 1,
+      "operation": "read",
+      "scale": 2.0,
+      "repeats": 5,
+      "warmup": 2,
+      "rustpfm_row_order": "bottom",
+      "worker_order": [
+        "rustpfm",
+        "justpfm"
+      ],
+      "payload_bytes": 4194304,
+      "rustpfm": {
+        "samples_seconds": [
+          0.000603193,
+          0.000533234,
+          0.000496065,
+          0.000447566,
+          0.000432839
+        ],
+        "process_peak_rss_kib": 10448,
+        "median_seconds": 0.000496065,
+        "payload_mib_per_second": 8063.459425680103
+      },
+      "justpfm": {
+        "samples_seconds": [
+          0.0013747979974141344,
+          0.0013424880016827956,
+          0.0013618140001199208,
+          0.001326568002696149,
+          0.0013749979989370331
+        ],
+        "process_peak_rss_kib": 61540,
+        "median_seconds": 0.0013618140001199208,
+        "payload_mib_per_second": 2937.2586855824375
+      }
+    },
+    {
+      "size": 1024,
+      "channels": 3,
+      "operation": "read",
+      "scale": 1.0,
+      "repeats": 5,
+      "warmup": 2,
+      "rustpfm_row_order": "bottom",
+      "worker_order": [
+        "justpfm",
+        "rustpfm"
+      ],
+      "payload_bytes": 12582912,
+      "justpfm": {
+        "samples_seconds": [
+          0.0025509390034130774,
+          0.0026825119930435903,
+          0.0025510199993732385,
+          0.0025806440025917254,
+          0.002708480002183933
+        ],
+        "process_peak_rss_kib": 108600,
+        "median_seconds": 0.0025806440025917254,
+        "payload_mib_per_second": 4650.002087830972
+      },
+      "rustpfm": {
+        "samples_seconds": [
+          0.001786989,
+          0.001854032,
+          0.001834106,
+          0.001754789,
+          0.001754108
+        ],
+        "process_peak_rss_kib": 26832,
+        "median_seconds": 0.001786989,
+        "payload_mib_per_second": 6715.206417051252
+      }
+    },
+    {
+      "size": 1024,
+      "channels": 3,
+      "operation": "read",
+      "scale": 2.0,
+      "repeats": 5,
+      "warmup": 2,
+      "rustpfm_row_order": "bottom",
+      "worker_order": [
+        "rustpfm",
+        "justpfm"
+      ],
+      "payload_bytes": 12582912,
+      "rustpfm": {
+        "samples_seconds": [
+          0.00215595,
+          0.002206754,
+          0.00206424,
+          0.002168232,
+          0.002205431
+        ],
+        "process_peak_rss_kib": 26784,
+        "median_seconds": 0.002168232,
+        "payload_mib_per_second": 5534.463101734501
+      },
+      "justpfm": {
+        "samples_seconds": [
+          0.0028832219977630302,
+          0.002976534000481479,
+          0.002920882005128078,
+          0.002915632001531776,
+          0.002853748999768868
+        ],
+        "process_peak_rss_kib": 108584,
+        "median_seconds": 0.002915632001531776,
+        "payload_mib_per_second": 4115.745743528539
+      }
+    },
+    {
+      "size": 2048,
+      "channels": 1,
+      "operation": "read",
+      "scale": 1.0,
+      "repeats": 5,
+      "warmup": 2,
+      "rustpfm_row_order": "bottom",
+      "worker_order": [
+        "justpfm",
+        "rustpfm"
+      ],
+      "payload_bytes": 16777216,
+      "justpfm": {
+        "samples_seconds": [
+          0.003275777999078855,
+          0.0032441690054838546,
+          0.003176884005370084,
+          0.0031465290012420155,
+          0.0031576990004396066
+        ],
+        "process_peak_rss_kib": 132132,
+        "median_seconds": 0.003176884005370084,
+        "payload_mib_per_second": 5036.381552790158
+      },
+      "rustpfm": {
+        "samples_seconds": [
+          0.002660682,
+          0.002544448,
+          0.002476482,
+          0.002735861,
+          0.002662675
+        ],
+        "process_peak_rss_kib": 35016,
+        "median_seconds": 0.002660682,
+        "payload_mib_per_second": 6013.495787922044
+      }
+    },
+    {
+      "size": 2048,
+      "channels": 1,
+      "operation": "read",
+      "scale": 2.0,
+      "repeats": 5,
+      "warmup": 2,
+      "rustpfm_row_order": "bottom",
+      "worker_order": [
+        "rustpfm",
+        "justpfm"
+      ],
+      "payload_bytes": 16777216,
+      "rustpfm": {
+        "samples_seconds": [
+          0.003152019,
+          0.003145967,
+          0.003202372,
+          0.003208694,
+          0.003252475
+        ],
+        "process_peak_rss_kib": 35012,
+        "median_seconds": 0.003202372,
+        "payload_mib_per_second": 4996.296495222916
+      },
+      "justpfm": {
+        "samples_seconds": [
+          0.003891012995154597,
+          0.004057530997670256,
+          0.0038258929998846725,
+          0.004236119995766785,
+          0.0039934320011525415
+        ],
+        "process_peak_rss_kib": 131700,
+        "median_seconds": 0.0039934320011525415,
+        "payload_mib_per_second": 4006.5788012371945
+      }
+    },
+    {
+      "size": 2048,
+      "channels": 3,
+      "operation": "read",
+      "scale": 1.0,
+      "repeats": 5,
+      "warmup": 2,
+      "rustpfm_row_order": "bottom",
+      "worker_order": [
+        "justpfm",
+        "rustpfm"
+      ],
+      "payload_bytes": 50331648,
+      "justpfm": {
+        "samples_seconds": [
+          0.008612839999841526,
+          0.010969439994369168,
+          0.008614822996605653,
+          0.008414101997914258,
+          0.008488810999551788
+        ],
+        "process_peak_rss_kib": 320496,
+        "median_seconds": 0.008612839999841526,
+        "payload_mib_per_second": 5573.0746189274605
+      },
+      "rustpfm": {
+        "samples_seconds": [
+          0.008348863,
+          0.008403323,
+          0.008355736,
+          0.008266129,
+          0.008351608
+        ],
+        "process_peak_rss_kib": 100204,
+        "median_seconds": 0.008351608,
+        "payload_mib_per_second": 5747.396190051066
+      }
+    },
+    {
+      "size": 2048,
+      "channels": 3,
+      "operation": "read",
+      "scale": 2.0,
+      "repeats": 5,
+      "warmup": 2,
+      "rustpfm_row_order": "bottom",
+      "worker_order": [
+        "rustpfm",
+        "justpfm"
+      ],
+      "payload_bytes": 50331648,
+      "rustpfm": {
+        "samples_seconds": [
+          0.010125112,
+          0.010239352,
+          0.01015117,
+          0.010141652,
+          0.010175144
+        ],
+        "process_peak_rss_kib": 100236,
+        "median_seconds": 0.01015117,
+        "payload_mib_per_second": 4728.518978600497
+      },
+      "justpfm": {
+        "samples_seconds": [
+          0.010331924000638537,
+          0.010246044999803416,
+          0.010189460997935385,
+          0.010094937002577353,
+          0.010044162998383399
+        ],
+        "process_peak_rss_kib": 320664,
+        "median_seconds": 0.010189460997935385,
+        "payload_mib_per_second": 4710.749666712095
+      }
+    }
+  ]
+}

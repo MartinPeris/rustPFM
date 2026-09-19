@@ -254,6 +254,7 @@ struct VectoredReader {
     payload: Cursor<Vec<u8>>,
     calls: usize,
     eof: bool,
+    limit: usize,
 }
 impl BufRead for VectoredReader {
     fn fill_buf(&mut self) -> io::Result<&[u8]> {
@@ -275,7 +276,7 @@ impl Read for VectoredReader {
         if self.eof {
             return Ok(0);
         }
-        let mut remaining = 11;
+        let mut remaining = self.limit;
         let mut read = 0;
         for output in outputs {
             let take = output.len().min(remaining);
@@ -312,6 +313,7 @@ fn vectored_reads_retry_and_advance_across_row_and_batch_boundaries() {
         payload: Cursor::new(payload.clone()),
         calls: 0,
         eof,
+        limit: 11,
     };
     let mut successful = reader(false);
     let image = decode_reader(&mut successful, DecodeOptions::default()).unwrap();
@@ -324,4 +326,36 @@ fn vectored_reads_retry_and_advance_across_row_and_batch_boundaries() {
         decode_reader(reader(true), DecodeOptions::default()),
         Err(Error::Invalid(_))
     ));
+}
+
+#[test]
+#[cfg(not(miri))]
+fn vectored_reads_cross_large_row_chunks_mid_float() {
+    let width = 16_385;
+    let header = format!(
+        "Pf\n{width} 3\n{}1\n",
+        if native() == ByteOrder::Little {
+            "-"
+        } else {
+            ""
+        }
+    );
+    let mut payload = Vec::new();
+    for y in (0..3).rev() {
+        for x in 0..width {
+            payload.extend_from_slice(&((y * width + x) as f32).to_ne_bytes());
+        }
+    }
+    let reader = VectoredReader {
+        header: Cursor::new(header.into_bytes()),
+        payload: Cursor::new(payload),
+        calls: 0,
+        eof: false,
+        limit: 65_539,
+    };
+    let image = decode_reader(reader, DecodeOptions::default()).unwrap();
+    assert_eq!(
+        image.pixels(),
+        &(0..width * 3).map(|i| i as f32).collect::<Vec<_>>()
+    );
 }
