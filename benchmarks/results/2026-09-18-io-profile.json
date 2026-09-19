@@ -1,0 +1,218 @@
+{
+  "baseline_commit": "d8bd90842664862e8ce657416446119098f02664",
+  "optimized_commit": "6b38907e3d58a816a1b070b216c2a7df886d19d9",
+  "helper": "examples/profile.rs",
+  "helper_sha256": "3f90eae4b45135e1d500f0ffc595844a95be57840d212b28f98148c6d218d1be",
+  "read_buffer_bytes": 8192,
+  "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.1\nLLVM version: 22.1.8",
+  "cpu_model": "AMD Ryzen 9 7940HS w/ Radeon 780M Graphics",
+  "policy": "Identical helper copied into a detached baseline worktree; stream APIs, in-place writes, file creation/open outside timer, first iteration discarded. Coarse I/O attribution with instrumentation overhead, not a file API benchmark or CPU sampling profile.",
+  "baseline": [
+    {
+      "operation": "write",
+      "iteration": 0,
+      "total_seconds": 0.028375356,
+      "io_seconds": 0.025075377,
+      "io_calls": 2049,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 1,
+      "total_seconds": 0.012818772,
+      "io_seconds": 0.009375399,
+      "io_calls": 2049,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 2,
+      "total_seconds": 0.012316883,
+      "io_seconds": 0.008940961,
+      "io_calls": 2049,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 3,
+      "total_seconds": 0.012094301,
+      "io_seconds": 0.008718188,
+      "io_calls": 2049,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 4,
+      "total_seconds": 0.012291305,
+      "io_seconds": 0.00894006,
+      "io_calls": 2049,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 5,
+      "total_seconds": 0.012381202,
+      "io_seconds": 0.008972635,
+      "io_calls": 2049,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 0,
+      "total_seconds": 0.029629329,
+      "io_seconds": 0.006285622,
+      "io_calls": 2050,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 1,
+      "total_seconds": 0.028745451,
+      "io_seconds": 0.00614191,
+      "io_calls": 2050,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 2,
+      "total_seconds": 0.028289608,
+      "io_seconds": 0.006095761,
+      "io_calls": 2050,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 3,
+      "total_seconds": 0.028353896,
+      "io_seconds": 0.006118211,
+      "io_calls": 2050,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 4,
+      "total_seconds": 0.028472146,
+      "io_seconds": 0.006255626,
+      "io_calls": 2050,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 5,
+      "total_seconds": 0.028671334,
+      "io_seconds": 0.006200998,
+      "io_calls": 2050,
+      "bytes": 50331664
+    }
+  ],
+  "optimized": [
+    {
+      "operation": "write",
+      "iteration": 0,
+      "total_seconds": 0.018188388,
+      "io_seconds": 0.015010421,
+      "io_calls": 769,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 1,
+      "total_seconds": 0.009844384,
+      "io_seconds": 0.006264938,
+      "io_calls": 769,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 2,
+      "total_seconds": 0.009672335,
+      "io_seconds": 0.00616996,
+      "io_calls": 769,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 3,
+      "total_seconds": 0.009598888,
+      "io_seconds": 0.006147786,
+      "io_calls": 769,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 4,
+      "total_seconds": 0.009703392,
+      "io_seconds": 0.006229904,
+      "io_calls": 769,
+      "bytes": 50331664
+    },
+    {
+      "operation": "write",
+      "iteration": 5,
+      "total_seconds": 0.009632802,
+      "io_seconds": 0.006177896,
+      "io_calls": 769,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 0,
+      "total_seconds": 0.02826412,
+      "io_seconds": 0.004429803,
+      "io_calls": 770,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 1,
+      "total_seconds": 0.02690916,
+      "io_seconds": 0.004316102,
+      "io_calls": 770,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 2,
+      "total_seconds": 0.026674426,
+      "io_seconds": 0.004391827,
+      "io_calls": 770,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 3,
+      "total_seconds": 0.026720982,
+      "io_seconds": 0.004435844,
+      "io_calls": 770,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 4,
+      "total_seconds": 0.027062365,
+      "io_seconds": 0.004413823,
+      "io_calls": 770,
+      "bytes": 50331664
+    },
+    {
+      "operation": "read",
+      "iteration": 5,
+      "total_seconds": 0.026906625,
+      "io_seconds": 0.004347713,
+      "io_calls": 770,
+      "bytes": 50331664
+    }
+  ],
+  "zero_initialization_probe": {
+    "baseline_commit": "d8bd90842664862e8ce657416446119098f02664",
+    "seconds": [
+      0.018289508,
+      0.018757904,
+      0.018239145,
+      0.018406475,
+      0.018140422,
+      0.018462909
+    ],
+    "policy": "Temporary Instant timing wrapped pixels.resize(count, 0.0) in the original decoder; stderr reporting after that timer. Probe removed before benchmarks. First call discarded."
+  }
+}
