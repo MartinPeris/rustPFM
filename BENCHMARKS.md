@@ -1,7 +1,7 @@
 # Performance comparison
 
-The quality harness now includes a [paired performance regression gate](benchmarks/REGRESSION.md).
-It compares source revisions on the same host; the cross-library reports below
+The local quality harness includes a [paired performance regression gate](benchmarks/REGRESSION.md).
+CI skips timing comparisons. The local gate compares source revisions on the same host; the cross-library reports below
 remain informational.
 
 **Current candidate:** see the [direct-buffer results](benchmarks/FAST_PATH.md)
