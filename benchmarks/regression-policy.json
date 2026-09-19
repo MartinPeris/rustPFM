@@ -1,0 +1,10 @@
+{
+  "baseline_revision": "fca8bd136aa2b99c8869c09c1a79a8c1478ca659",
+  "slowdown_percent": 20,
+  "minimum_increase_ms": 0.2,
+  "trials": 3,
+  "repeats": 7,
+  "warmup": 2,
+  "sizes": [1024, 2048],
+  "channels": [1, 3]
+}
