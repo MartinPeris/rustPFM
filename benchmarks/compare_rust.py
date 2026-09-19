@@ -54,6 +54,7 @@ def main():
     parser.add_argument('--warmup', type=positive, default=2)
     parser.add_argument('--temp-dir', type=Path, default=Path(tempfile.gettempdir()))
     parser.add_argument('--output', type=Path, default=ROOT / 'benchmarks/results/rust-local.json')
+    parser.add_argument('--row-order', choices=['top', 'bottom'], default='top')
     parser.add_argument('--reverse-order', action='store_true')
     args = parser.parse_args()
     if sys.platform != 'linux':
@@ -76,9 +77,11 @@ def main():
         os=platform.platform(), cpu_model=next(line.split(':', 1)[1].strip() for line in Path('/proc/cpuinfo').read_text().splitlines() if line.startswith('model name')),
         cpu_affinity=sorted(os.sched_getaffinity(0)), load_average_before=os.getloadavg(),
         storage=command('findmnt', '-T', str(args.temp_dir), '-o', 'SOURCE,FSTYPE,OPTIONS', '-n'),
+        transparent_hugepage_policy=Path('/sys/kernel/mm/transparent_hugepage/enabled').read_text().strip() if Path('/sys/kernel/mm/transparent_hugepage/enabled').exists() else None,
+        rustpfm_row_order=args.row_order, rustpfm_features='default',
         temp_dir=str(args.temp_dir.resolve()), reverse_order=args.reverse_order,
         timing_policy='Serial fresh workers, alternating order; one validation call, warmups, then samples. Includes file open/close, buffering, decoding, allocation, and output extraction. Excludes fixture generation, startup, validation and result disposal. Default release profile; no target-cpu override.',
-        semantics='Scale 1 only, little endian, even square grayscale/RGB; contiguous top-first output. zune-ppm does not encode PFM and ignores scale magnitude. Both default APIs are measured: rustPFM also checks exact payload size and trailing bytes, zune-ppm does not provide identical validation guarantees.',
+        semantics='Scale 1 only, little endian, even square grayscale/RGB; contiguous output; Rust physical row order is recorded separately, zune output is top-first. zune-ppm does not encode PFM and ignores scale magnitude. Both default APIs are measured: rustPFM also checks exact payload size and trailing bytes, zune-ppm does not provide identical validation guarantees.',
         cache_policy='Warm/cache-eligible, no eviction or fsync; not durable disk throughput.',
         memory_policy='Linux process-lifetime peak RSS KiB, including runtime, decoded buffers and all calls; excludes OS page cache. Not per-call allocation measurement.',
     )
@@ -93,7 +96,7 @@ def main():
                 case = dict(size=size, channels=channels, operation='read', scale=1.0, repeats=args.repeats, warmup=args.warmup, worker_order=order, payload_bytes=size * size * channels * 4)
                 for library in order:
                     fixture(path, size, channels)
-                    result = json.loads(command(str(binary), library, str(size), str(channels), str(args.repeats), str(args.warmup), str(path)))
+                    result = json.loads(command(str(binary), library, str(size), str(channels), str(args.repeats), str(args.warmup), str(path), args.row_order))
                     assert len(result['samples_seconds']) == args.repeats
                     result['median_seconds'] = statistics.median(result['samples_seconds'])
                     result['payload_mib_per_second'] = case['payload_bytes'] / 1024**2 / result['median_seconds']

@@ -1,13 +1,16 @@
 #![doc = include_str!("../README.md")]
-#![forbid(unsafe_code)]
+#![deny(unsafe_code)]
 #![warn(missing_docs)]
+#[allow(unsafe_code)]
+mod buffer;
 mod encode;
 mod error;
 mod files;
 mod image;
 pub use error::{Error, Result};
 pub use image::{
-    ByteOrder, ColorType, DecodeOptions, EncodeOptions, Header, Image, ImageView, ScaleMode,
+    ByteOrder, ColorType, DecodeOptions, EncodeOptions, Header, Image, ImageView, RowOrder,
+    ScaleMode,
 };
 
 mod decode;

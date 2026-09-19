@@ -1,5 +1,10 @@
 # Performance comparison
 
+**Current candidate:** see the [direct-buffer results](benchmarks/FAST_PATH.md)
+for matched before/after runs against both libraries, allocation controls and
+explicit storage-order comparisons. The [earlier I/O optimization report](benchmarks/OPTIMIZATION.md)
+and the tables below preserve historical baselines.
+
 This opt-in Linux benchmark compares the Rust release build with installed
 justPFM 1.2.1. It is a measurement tool, not a CI timing gate. No speed advantage
 is assumed: NumPy already implements justPFM's array operations in native code.

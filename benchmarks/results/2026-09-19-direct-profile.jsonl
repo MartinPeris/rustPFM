@@ -1,0 +1,12 @@
+{"operation":"write","iteration":0,"total_seconds":0.011858263,"io_seconds":0.011814599,"io_calls":33,"bytes":50331664}
+{"operation":"write","iteration":1,"total_seconds":0.005060942,"io_seconds":0.005041526,"io_calls":33,"bytes":50331664}
+{"operation":"write","iteration":2,"total_seconds":0.00498373,"io_seconds":0.004964444,"io_calls":33,"bytes":50331664}
+{"operation":"write","iteration":3,"total_seconds":0.004972128,"io_seconds":0.004952961,"io_calls":33,"bytes":50331664}
+{"operation":"write","iteration":4,"total_seconds":0.004993719,"io_seconds":0.004975067,"io_calls":33,"bytes":50331664}
+{"operation":"write","iteration":5,"total_seconds":0.004970084,"io_seconds":0.004950881,"io_calls":33,"bytes":50331664}
+{"operation":"read","iteration":0,"total_seconds":0.005661162,"io_seconds":0.005597324,"io_calls":34,"bytes":50331664}
+{"operation":"read","iteration":1,"total_seconds":0.005469637,"io_seconds":0.005428131,"io_calls":34,"bytes":50331664}
+{"operation":"read","iteration":2,"total_seconds":0.005424995,"io_seconds":0.005385925,"io_calls":34,"bytes":50331664}
+{"operation":"read","iteration":3,"total_seconds":0.005194209,"io_seconds":0.005156664,"io_calls":34,"bytes":50331664}
+{"operation":"read","iteration":4,"total_seconds":0.005139427,"io_seconds":0.005102223,"io_calls":34,"bytes":50331664}
+{"operation":"read","iteration":5,"total_seconds":0.00500551,"io_seconds":0.00496768,"io_calls":34,"bytes":50331664}

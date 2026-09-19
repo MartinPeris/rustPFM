@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "environment": {
+    "utc_timestamp": "2026-09-19T04:07:23.507116+00:00",
+    "git_revision": "fca8bd136aa2b99c8869c09c1a79a8c1478ca659",
+    "git_status": "",
+    "source_sha256": {
+      "Cargo.toml": "cb3db573f32c5bd098bcc16e661a99edf3b76a032ca0467ba4f74ce00631bf66",
+      "benchmarks/compare_rust.py": "16c7c31a951dc01b08ecb365b64a258da53773fe6b717b08da314e2d30c38462",
+      "benchmarks/rust-codecs/Cargo.lock": "b0a076a21f73a91257f38c13db4b7284b780c6cb2eed7ed4af41e3a560a00dda",
+      "benchmarks/rust-codecs/Cargo.toml": "1872de757a6cc83bafe51cd3950c9569b5339a95ca112b01adfd217befaab1da",
+      "benchmarks/rust-codecs/src/main.rs": "46b534ed1af20d3bc35ebc2feaae1ced8930047828d6113b5f7deb50f32629c7",
+      "src/arrays.rs": "bc2a6c0c9ff12e0d0ad305063b4067087e74fc79876679c6b1241151ad4f8444",
+      "src/buffer.rs": "eeda7dec9e657ae3208ba69267dec4535ff721915f47078348cea24ee4c90255",
+      "src/decode.rs": "a7c8944a2e614963598335e447d2d4d448c64bcf6cd48ab196f076f622dcc5f7",
+      "src/encode.rs": "1b48e8947abc87999abb325ce94910fbfbd2d42c4568f4d51358abcd38971b71",
+      "src/error.rs": "60510f6b38d932e5a9dfd06142c671ddf518661d4046e1d41868c7504a47e3ce",
+      "src/files.rs": "1cbc777a6f4292c9f614d10e0f727a0f902dbb08a8b3177c5a463cd309db35d5",
+      "src/image.rs": "49df0017b363179a568486ccdabf7eed522ea026063155a77c104208a62ee17d",
+      "src/lib.rs": "f86db545a690c3fe831480cc48dbf8e67f725e3410088a6d5e38d567f578c245"
+    },
+    "binary_sha256": "4ab298c5a9b65376762ad409a0544fabf9f57b779e6262e82d08068dcdbb2974",
+    "dependencies": [
+      {
+        "name": "rustpfm",
+        "version": "0.1.0",
+        "source": null
+      },
+      {
+        "name": "rustpfm-codec-comparison",
+        "version": "0.0.0",
+        "source": null
+      },
+      {
+        "name": "zune-core",
+        "version": "0.5.1",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      },
+      {
+        "name": "zune-ppm",
+        "version": "0.5.1",
+        "source": "registry+https://github.com/rust-lang/crates.io-index"
+      }
+    ],
+    "rustc": "rustc 1.98.1 (48a229cea 2026-09-01)\nbinary: rustc\ncommit-hash: 48a229ceaefd4985c50990b14116b6d856af0985\ncommit-date: 2026-09-01\nhost: x86_64-unknown-linux-gnu\nrelease: 1.98.1\nLLVM version: 22.1.8",
+    "cargo": "cargo 1.98.1 (797e8a9bc 2026-08-05)",
+    "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]",
+    "os": "Linux-7.0.0-31-generic-x86_64-with-glibc2.39",
+    "cpu_model": "AMD Ryzen 9 7940HS w/ Radeon 780M Graphics",
+    "cpu_affinity": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15
+    ],
+    "load_average_before": [
+      2.12646484375,
+      1.62353515625,
+      1.6767578125
+    ],
+    "storage": "/dev/nvme0n1p2 ext4   rw,relatime",
+    "transparent_hugepage_policy": "always [madvise] never",
+    "rustpfm_row_order": "bottom",
+    "rustpfm_features": "default",
+    "temp_dir": "/tmp",
+    "reverse_order": true,
+    "timing_policy": "Serial fresh workers, alternating order; one validation call, warmups, then samples. Includes file open/close, buffering, decoding, allocation, and output extraction. Excludes fixture generation, startup, validation and result disposal. Default release profile; no target-cpu override.",
+    "semantics": "Scale 1 only, little endian, even square grayscale/RGB; contiguous output; Rust physical row order is recorded separately, zune output is top-first. zune-ppm does not encode PFM and ignores scale magnitude. Both default APIs are measured: rustPFM also checks exact payload size and trailing bytes, zune-ppm does not provide identical validation guarantees.",
+    "cache_policy": "Warm/cache-eligible, no eviction or fsync; not durable disk throughput.",
+    "memory_policy": "Linux process-lifetime peak RSS KiB, including runtime, decoded buffers and all calls; excludes OS page cache. Not per-call allocation measurement."
+  },
+  "cases": [
+    {
+      "size": 1024,
+      "channels": 1,
+      "operation": "read",
+      "scale": 1.0,
+      "repeats": 5,
+      "warmup": 2,
+      "worker_order": [
+        "zune-ppm",
+        "rustpfm"
+      ],
+      "payload_bytes": 4194304,
+      "zune-ppm": {
+        "samples_seconds": [
+          0.005863876,
+          0.005798626,
+          0.005808083,
+          0.005770744,
+          0.005821528
+        ],
+        "process_peak_rss_kib": 6380,
+        "median_seconds": 0.005808083,
+        "payload_mib_per_second": 688.6953922662606
+      },
+      "rustpfm": {
+        "samples_seconds": [
+          0.000489354,
+          0.000429764,
+          0.000402563,
+          0.000408233,
+          0.000394799
+        ],
+        "process_peak_rss_kib": 6368,
+        "median_seconds": 0.000408233,
+        "payload_mib_per_second": 9798.325956010416
+      }
+    },
+    {
+      "size": 1024,
+      "channels": 3,
+      "operation": "read",
+      "scale": 1.0,
+      "repeats": 5,
+      "warmup": 2,
+      "worker_order": [
+        "rustpfm",
+        "zune-ppm"
+      ],
+      "payload_bytes": 12582912,
+      "rustpfm": {
+        "samples_seconds": [
+          0.001676766,
+          0.001622455,
+          0.001578705,
+          0.001702573,
+          0.001603901
+        ],
+        "process_peak_rss_kib": 14568,
+        "median_seconds": 0.001622455,
+        "payload_mib_per_second": 7396.198970079293
+      },
+      "zune-ppm": {
+        "samples_seconds": [
+          0.016371037,
+          0.016358413,
+          0.016348325,
+          0.016293182,
+          0.016457846
+        ],
+        "process_peak_rss_kib": 14580,
+        "median_seconds": 0.016358413,
+        "payload_mib_per_second": 733.5674921522034
+      }
+    },
+    {
+      "size": 2048,
+      "channels": 1,
+      "operation": "read",
+      "scale": 1.0,
+      "repeats": 5,
+      "warmup": 2,
+      "worker_order": [
+        "zune-ppm",
+        "rustpfm"
+      ],
+      "payload_bytes": 16777216,
+      "zune-ppm": {
+        "samples_seconds": [
+          0.021774062,
+          0.0227751,
+          0.022446793,
+          0.020911309,
+          0.023038175
+        ],
+        "process_peak_rss_kib": 18668,
+        "median_seconds": 0.022446793,
+        "payload_mib_per_second": 712.796701069948
+      },
+      "rustpfm": {
+        "samples_seconds": [
+          0.002601974,
+          0.002519602,
+          0.002348456,
+          0.002424466,
+          0.00235632
+        ],
+        "process_peak_rss_kib": 18668,
+        "median_seconds": 0.002424466,
+        "payload_mib_per_second": 6599.391371130797
+      }
+    },
+    {
+      "size": 2048,
+      "channels": 3,
+      "operation": "read",
+      "scale": 1.0,
+      "repeats": 5,
+      "warmup": 2,
+      "worker_order": [
+        "rustpfm",
+        "zune-ppm"
+      ],
+      "payload_bytes": 50331648,
+      "rustpfm": {
+        "samples_seconds": [
+          0.007031833,
+          0.007029449,
+          0.007125566,
+          0.007013449,
+          0.007103805
+        ],
+        "process_peak_rss_kib": 51316,
+        "median_seconds": 0.007031833,
+        "payload_mib_per_second": 6826.100676736776
+      },
+      "zune-ppm": {
+        "samples_seconds": [
+          0.084173764,
+          0.082537362,
+          0.082121204,
+          0.082895083,
+          0.08225981
+        ],
+        "process_peak_rss_kib": 51276,
+        "median_seconds": 0.082537362,
+        "payload_mib_per_second": 581.5548115046371
+      }
+    }
+  ]
+}

@@ -42,3 +42,18 @@ fn rejects_unsupported_dimensions_channels_and_empty_images() {
     assert!(Image::from_ndarray(Array2::<f32>::zeros((0, 3)).view()).is_err());
     assert!(Image::from_ndarray(Array::<f32, _>::zeros((1, 2, 3, 4)).view()).is_err());
 }
+
+#[test]
+fn bottom_first_storage_has_top_first_negative_stride_view() {
+    let mut image = Image::new(2, 3, ColorType::Gray, vec![1., 2., 3., 4., 5., 6.]).unwrap();
+    image.set_row_order(rustpfm::RowOrder::BottomFirst);
+    let view = image.as_ndarray();
+    assert_eq!(view.strides(), &[-2, 1, 1]);
+    assert_eq!(view[[0, 0, 0]], 1.);
+    assert_eq!(view[[2, 1, 0]], 6.);
+    assert_eq!(view.as_ptr(), image.pixels()[4..].as_ptr());
+    assert_eq!(
+        Image::from_ndarray(view).unwrap().pixels(),
+        &[1., 2., 3., 4., 5., 6.]
+    );
+}

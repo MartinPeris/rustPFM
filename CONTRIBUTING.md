@@ -12,8 +12,16 @@ git config --local core.hooksPath .githooks
 Run `./scripts/check.sh` before opening a pull request. It runs formatting,
 a zero-default-dependency check, Clippy with warnings denied, unit/integration/doc tests with default dependencies
 disabled and all features enabled, a **95% library line coverage gate**, rustdoc with warnings
-denied, and `cargo package` with compilation verification. Cargo.lock is tracked
+denied, `cargo package` with compilation verification, and the Miri safety checks
+in `scripts/check-safety.sh`. Cargo.lock is tracked
 so local and CI checks resolve the same dependencies. The default build has none. Package verification creates an archive locally; it does not publish it.
+
+The safety script uses pinned `nightly-2026-09-19` with Miri and rust-src, installed
+by `scripts/install-quality-tools.sh`. It checks allocation/byte views, direct
+I/O, and ndarray views with strict provenance on native and interpreted big-endian Linux targets. This development toolchain does
+not change the library's stable Rust 1.85 MSRV. Linux FFI hints are excluded
+under Miri; native tests exercise the allocation path. See [SAFETY.md](SAFETY.md)
+for that limit and the invariants every unsafe change must preserve.
 
 The pre-commit and pre-merge-commit hooks check a temporary snapshot of the Git index, so partially
 staged edits are checked as they would be committed. New files must be staged.
@@ -45,6 +53,9 @@ platform-specific I/O failure paths cannot be forced safely in routine tests.
 See [RELEASING.md](RELEASING.md) for the first-release checklist.
 
 Keep default runtime dependencies at zero. Optional adapters and development
-helpers may add dependencies when justified. Do not add unsafe code, publishing
-credentials, or automatic releases as part of routine implementation work.
+helpers may add dependencies when justified. Unsafe code is denied outside the
+private `src/buffer.rs` boundary. Changes there need explicit safety reasoning,
+review, and appropriate Miri/native tests; Clippy requires documented unsafe
+blocks. Do not expand that boundary, add publishing credentials, or introduce
+automatic releases as part of routine implementation work.
 `publish = false` remains in Cargo.toml until the first release is reviewed.

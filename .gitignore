@@ -1,3 +1,5 @@
 /target/
 
 /benchmarks/rust-codecs/target/
+
+__pycache__/

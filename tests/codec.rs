@@ -37,6 +37,7 @@ fn independent_netpbm_fixtures() {
                         DecodeOptions {
                             scale_mode: mode,
                             max_pixels: Some(6),
+                            ..Default::default()
                         },
                     )
                     .unwrap();

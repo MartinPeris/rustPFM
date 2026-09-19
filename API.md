@@ -9,8 +9,19 @@ and functions are exported at the crate root.
 `ImageView::new(width, height, ColorType, &[f32])` borrows them. Both require
 positive dimensions, checked representable sizes, and exactly width × height ×
 channels samples. `ColorType::Gray` has one channel; `Rgb` has three interleaved
-red/green/blue channels. Pixels are contiguous, top-first, native-endian `f32`.
-PFM payloads are bottom-first; the codec handles row reversal.
+red/green/blue channels. Pixels are contiguous, native-endian `f32`. Both
+constructors interpret input as top-first.
+
+`DecodeOptions::row_order` selects physical storage: `RowOrder::TopFirst` is the
+default; `RowOrder::BottomFirst` keeps PFM file order and reads the payload contiguously.
+`ImageView::with_row_order(width, height, color_type, pixels, row_order)` borrows
+either layout without reordering it. `pixels()`, `pixels_mut()`, and
+`into_pixels()` expose physical storage, so check `row_order()` before treating
+the first samples as the top row. `Image::row(y)` and `ImageView::row(y)` always
+count from the top and return `None` out of bounds.
+`Image::set_row_order(order)` rearranges storage in place without changing logical
+pixel positions. Encoding accepts either layout and always emits bottom-first
+PFM rows.
 
 Access `width`, `height`, `color_type`, `pixels`, `pixels_mut`, `into_pixels`, and
 `view` through Image's methods. Dimensions cannot be mutated independently of
@@ -42,13 +53,26 @@ become zero or nonfinite are rejected.
 Negative scale selects little-endian payload; positive selects big-endian.
 The payload must contain precisely the declared sample bytes.
 
-`DecodeOptions::default()` applies the scale and sets no pixel limit.
+`DecodeOptions::default()` applies the scale, returns top-first storage, and sets
+no pixel limit.
 `max_pixels: Some(n)` requires a positive n and bounds width × height before
 pixel allocation, regardless of channel count. Set it for untrusted inputs.
 A grayscale pixel requires 4 bytes and RGB requires 12, excluding the input
-buffer, stack scratch, buffering, and application copies. This is not a total
-process memory limit. The codec uses checked arithmetic and fallible pixel
-buffer reservation, but operating-system memory overcommit is not controlled.
+buffer, buffering, and application copies. This is not a total process memory
+limit. The codec checks sizes and allocates an initialized, zeroed pixel buffer
+through the global allocator, reporting a null allocation as `Error::Allocation`.
+Default top-first reads scatter file rows directly to their final positions;
+bottom-first reads fill the buffer contiguously. Both then convert byte order
+and apply scale when needed. Operating-system memory overcommit is not
+controlled.
+
+The dependency-free `hugepages` feature is enabled by default. On Linux, decoding
+makes a best-effort `MADV_HUGEPAGE` request for whole pages inside sufficiently
+large pixel allocations. It changes no system settings, ignores hint failures,
+and has no effect on other platforms. An allocator that retains the mapping
+after the image is dropped can retain the hint too. Set
+`default-features = false` in Cargo.toml to disable these requests. See
+[SAFETY.md](SAFETY.md) for the allocation and unsafe-code boundary.
 
 ## Scale conventions
 
@@ -75,9 +99,12 @@ Input data is never changed.
 
 Writer options are validated before bytes are emitted. A generic writer can
 contain partial output after an I/O failure. `encode_writer` does not flush
-its writer; the caller must handle flushing and its errors. Serialization uses
-64 KiB stack scratch. The bytes convenience API additionally holds the entire
-encoded output, and decoding holds the complete owned pixel buffer.
+its writer; the caller must handle flushing and its errors. Native-endian
+output uses bounded vectored writes borrowing pixel bytes, without a pixel
+staging copy. Writers without specialized vectored support remain supported.
+Opposite-endian output uses 64 KiB stack scratch for conversion. The bytes
+convenience API additionally holds the entire encoded output, and decoding holds
+the complete owned pixel buffer.
 
 ## Filesystem writes
 
@@ -101,7 +128,9 @@ file; cleanup is performed on normal Rust error paths.
 
 Enable `features = ["ndarray"]` in the dependency declaration.
 `image.as_ndarray()` returns a borrowed `(height, width, channels)` view with no
-copy. `Image::from_ndarray(array.view())` accepts 2D grayscale or 3D arrays with
+copy. The view always indexes logical top-first pixels; bottom-first storage
+uses a negative row stride, so the view need not have standard contiguous layout.
+`Image::from_ndarray(array.view())` accepts 2D grayscale or 3D arrays with
 one or three channels; it copies logical pixels into an owned Image. Strided,
 reversed, and Fortran-order layouts are supported. This conversion allocates a
 full pixel buffer; use `ImageView` for already-contiguous borrowed input.

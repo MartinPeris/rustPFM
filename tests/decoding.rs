@@ -36,7 +36,8 @@ fn decodes_both_byte_orders_and_preserves_source_metadata() {
                 &bytes,
                 DecodeOptions {
                     scale_mode: ScaleMode::Raw,
-                    max_pixels: Some(6)
+                    max_pixels: Some(6),
+                    ..Default::default()
                 }
             )
             .unwrap()
