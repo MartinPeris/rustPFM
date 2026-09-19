@@ -11,10 +11,12 @@ keywords = ["pfm", "image", "depth", "float"]
 categories = ["multimedia::images", "encoding"]
 # Remove only when the codec, compatibility policy, and release checks are ready.
 publish = false
-include = ["src/**", "tests/**", "examples/**", "benchmarks/**", "Cargo.toml", "Cargo.lock", "README.md", "API.md", "DESIGN.md", "CHANGELOG.md", "CONTRIBUTING.md", "RELEASING.md", "BENCHMARKS.md", "scripts/**", "LICENSE"]
+include = ["src/**", "tests/**", "examples/**", "benchmarks/**", "Cargo.toml", "Cargo.lock", "README.md", "API.md", "DESIGN.md", "CHANGELOG.md", "CONTRIBUTING.md", "RELEASING.md", "BENCHMARKS.md", "SAFETY.md", "scripts/**", "LICENSE"]
 
 [features]
-default = []
+default = ["hugepages"]
+# Best-effort Linux allocation hint; no effect on other platforms.
+hugepages = []
 ndarray = ["dep:ndarray"]
 
 [dependencies]

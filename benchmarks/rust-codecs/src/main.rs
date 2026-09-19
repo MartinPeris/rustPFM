@@ -5,7 +5,7 @@ use zune_ppm::PPMDecoder;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 7 {
+    if !(7..=8).contains(&args.len()) {
         return Err("usage: comparison rustpfm|zune-ppm SIZE CHANNELS REPEATS WARMUP FILE".into());
     }
     let size: usize = args[2].parse()?;
@@ -16,6 +16,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err("requires positive even size, 1 or 3 channels, and positive repeats".into());
     }
     let path = Path::new(&args[6]);
+    let row_order = match args.get(7).map(String::as_str).unwrap_or("top") {
+        "top" => rustpfm::RowOrder::TopFirst,
+        "bottom" => rustpfm::RowOrder::BottomFirst,
+        _ => return Err("invalid row order".into()),
+    };
     let count = size
         .checked_mul(size)
         .and_then(|n| n.checked_mul(channels))
@@ -25,7 +30,13 @@ fn main() -> Result<(), Box<dyn Error>> {
         let start = Instant::now();
         let (width, height, actual_channels, pixels) = match args[1].as_str() {
             "rustpfm" => {
-                let image = rustpfm::read_pfm(black_box(path), rustpfm::DecodeOptions::default())?;
+                let image = rustpfm::read_pfm(
+                    black_box(path),
+                    rustpfm::DecodeOptions {
+                        row_order,
+                        ..Default::default()
+                    },
+                )?;
                 (
                     image.width(),
                     image.height(),
@@ -56,7 +67,18 @@ fn main() -> Result<(), Box<dyn Error>> {
         assert_eq!((width, height, actual_channels), (size, size, channels));
         assert_eq!(pixels.len(), count);
         for (index, &actual) in pixels.iter().enumerate() {
-            assert_eq!(actual, (index % 257) as f32 - 128.0, "sample {index}");
+            let logical_index =
+                if args[1] == "rustpfm" && row_order == rustpfm::RowOrder::BottomFirst {
+                    let row = size * channels;
+                    (size - 1 - index / row) * row + index % row
+                } else {
+                    index
+                };
+            assert_eq!(
+                actual,
+                (logical_index % 257) as f32 - 128.0,
+                "sample {index}"
+            );
         }
         // Validation and result disposal are outside the timed section.
     }

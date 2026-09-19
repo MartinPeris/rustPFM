@@ -86,6 +86,8 @@ def main():
     parser.add_argument('--warmup', type=positive, default=2)
     parser.add_argument('--temp-dir', type=Path, default=Path(tempfile.gettempdir()))
     parser.add_argument('--output', type=Path, default=ROOT / 'benchmarks/results/local.json')
+    parser.add_argument('--row-order', choices=['top', 'bottom'], default='top', help='Rust physical output order; bottom skips row reversal')
+    parser.add_argument('--operations', nargs='+', choices=['read', 'write'], default=['read', 'write'])
     parser.add_argument('--reverse-order', action='store_true', help='reverse alternating library order for a second trial')
     parser.add_argument('--worker', help=argparse.SUPPRESS)
     parser.add_argument('--path', type=Path, help=argparse.SUPPRESS)
@@ -114,22 +116,25 @@ def main():
         justpfm_source_sha256=hashlib.sha256(source.read_bytes()).hexdigest(),
         os=platform.platform(), cpu_model=cpu, cpu_count=os.cpu_count(),
         cpu_affinity=sorted(os.sched_getaffinity(0)), host_byte_order=sys.byteorder,
+        transparent_hugepage_policy=Path('/sys/kernel/mm/transparent_hugepage/enabled').read_text().strip() if Path('/sys/kernel/mm/transparent_hugepage/enabled').exists() else None,
+        numpy_madvise_hugepage=bool(np._core.multiarray._get_madvise_hugepage()),
+        numpy_hugepage_env=os.environ.get('NUMPY_MADVISE_HUGEPAGE'), rustpfm_row_order=args.row_order, rustpfm_features='default',
         load_average_before=os.getloadavg(), reverse_order=args.reverse_order,
         storage=command('findmnt', '-T', str(args.temp_dir), '-o', 'SOURCE,FSTYPE,OPTIONS', '-n'),
         temp_dir=str(args.temp_dir.resolve()),
         timing_policy='Serial isolated workers; alternating library order per case. One validation call plus requested warmups. Timers include library call, allocation and scaling, exclude imports, process startup, fixture generation, validation and result disposal. Release Rust default optimization; no target-cpu override.',
         cache_policy='Warm/cache-eligible, no cache eviction or fsync. Existing files are atomically replaced. This is not durable storage throughput.',
         memory_policy='Linux process-lifetime peak RSS in KiB per isolated worker, includes runtime, input, output, validation buffers and all calls; excludes OS page cache. Not per-call allocations. Different runtimes and validation implementations make absolute RSS non-equivalent. No allocator instrumentation.',
-        layout_policy='Both receive contiguous top-first float32 input; little-endian files; grayscale and interleaved RGB. Rust returns contiguous top-first owned pixels; justPFM returns a writable top-first negative-row-stride array. No extra Python contiguity conversion is timed.',
+        layout_policy='Both receive contiguous top-first float32 input; little-endian files; grayscale and interleaved RGB. Rust returns contiguous owned pixels in the explicitly recorded rustpfm_row_order; justPFM returns a writable top-first negative-row-stride array. No extra Python contiguity conversion is timed.',
     )
     report = dict(schema_version=1, environment=environment, cases=[])
     with tempfile.TemporaryDirectory(prefix='rustpfm-comparison-', dir=args.temp_dir) as temporary:
         path = Path(temporary) / 'image.pfm'
         for size in args.sizes:
             for channels in [1, 3]:
-                for operation in ['read', 'write']:
+                for operation in args.operations:
                     for scale in [1.0, 2.0]:
-                        case = dict(size=size, channels=channels, operation=operation, scale=scale, repeats=args.repeats, warmup=args.warmup)
+                        case = dict(size=size, channels=channels, operation=operation, scale=scale, repeats=args.repeats, warmup=args.warmup, rustpfm_row_order=args.row_order)
                         order = ['rustpfm', 'justpfm'] if len(report['cases']) % 2 == 0 else ['justpfm', 'rustpfm']
                         if args.reverse_order:
                             order.reverse()
@@ -137,7 +142,7 @@ def main():
                         for library in order:
                             fixture(path, case)
                             if library == 'rustpfm':
-                                cmd = [str(binary), operation, str(size), str(channels), str(scale), str(args.repeats), str(args.warmup), str(path)]
+                                cmd = [str(binary), operation, str(size), str(channels), str(scale), str(args.repeats), str(args.warmup), str(path), args.row_order]
                             else:
                                 cmd = [sys.executable, str(Path(__file__).resolve()), '--worker', json.dumps(case), '--path', str(path)]
                             result = json.loads(subprocess.check_output(cmd, text=True))

@@ -41,6 +41,15 @@ pub struct Header {
     /// Source payload byte order.
     pub byte_order: ByteOrder,
 }
+/// Physical storage order. Logical row access always counts from the top.
+#[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
+pub enum RowOrder {
+    /// Contiguous top-first storage, convenient for conventional image buffers.
+    #[default]
+    TopFirst,
+    /// PFM file order; avoids reversing rows after decoding.
+    BottomFirst,
+}
 /// Interpretation of the header scale while decoding.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq)]
 pub enum ScaleMode {
@@ -57,6 +66,8 @@ pub struct DecodeOptions {
     pub max_pixels: Option<usize>,
     /// Whether to apply the header scale.
     pub scale_mode: ScaleMode,
+    /// Physical row order of the returned buffer. Defaults to top-first.
+    pub row_order: RowOrder,
 }
 /// Encode options. Samples are stored unchanged; scale is header metadata.
 #[derive(Clone, Copy, Debug)]
@@ -88,15 +99,20 @@ pub(crate) fn sample_count(width: usize, height: usize, color: ColorType) -> Res
     }
     Ok(count)
 }
-/// Contiguous top-first, interleaved float32 pixels owned by the caller.
+/// Contiguous interleaved float32 storage with explicit physical row order.
 #[derive(Clone, Debug)]
 pub struct Image {
     header: Header,
     pixels: Vec<f32>,
+    row_order: RowOrder,
 }
 impl Image {
-    pub(crate) fn from_decoded(header: Header, pixels: Vec<f32>) -> Self {
-        Self { header, pixels }
+    pub(crate) fn from_decoded(header: Header, pixels: Vec<f32>, row_order: RowOrder) -> Self {
+        Self {
+            header,
+            pixels,
+            row_order,
+        }
     }
     /// Validate dimensions and exact sample count without copying the vector.
     pub fn new(
@@ -115,6 +131,7 @@ impl Image {
                 byte_order: ByteOrder::Little,
             },
             pixels,
+            row_order: RowOrder::TopFirst,
         })
     }
     /// Source header, including original scale even after scaled decoding.
@@ -133,7 +150,7 @@ impl Image {
     pub fn color_type(&self) -> ColorType {
         self.header.color_type
     }
-    /// Borrow top-first native-endian samples.
+    /// Borrow native-endian samples in physical `row_order()` (not always top-first).
     pub fn pixels(&self) -> &[f32] {
         &self.pixels
     }
@@ -141,9 +158,34 @@ impl Image {
     pub fn pixels_mut(&mut self) -> &mut [f32] {
         &mut self.pixels
     }
-    /// Consume the image and return its pixel buffer.
+    /// Consume the image and return its buffer in physical `row_order()`.
     pub fn into_pixels(self) -> Vec<f32> {
         self.pixels
+    }
+    /// Physical row order of the pixel buffer.
+    pub fn row_order(&self) -> RowOrder {
+        self.row_order
+    }
+    /// Borrow a logical row counted from the top, or None when out of bounds.
+    pub fn row(&self, y: usize) -> Option<&[f32]> {
+        self.view().row(y)
+    }
+    /// Reorder storage in place without changing logical pixel positions.
+    pub fn set_row_order(&mut self, order: RowOrder) {
+        if self.row_order == order {
+            return;
+        }
+        let row = self.width() * self.color_type().channels();
+        let height = self.height();
+        let (top, rest) = self.pixels.split_at_mut((height / 2) * row);
+        let bottom = &mut rest[(height % 2) * row..];
+        for (a, b) in top
+            .chunks_exact_mut(row)
+            .zip(bottom.chunks_exact_mut(row).rev())
+        {
+            a.swap_with_slice(b);
+        }
+        self.row_order = order;
     }
     /// Borrow a validated view suitable for encoding.
     pub fn view(&self) -> ImageView<'_> {
@@ -152,16 +194,18 @@ impl Image {
             height: self.height(),
             color_type: self.color_type(),
             pixels: &self.pixels,
+            row_order: self.row_order,
         }
     }
 }
-/// A validated borrowed, contiguous, top-first pixel buffer.
+/// A validated borrowed contiguous pixel buffer with explicit physical row order.
 #[derive(Clone, Copy, Debug)]
 pub struct ImageView<'a> {
     width: usize,
     height: usize,
     color_type: ColorType,
     pixels: &'a [f32],
+    row_order: RowOrder,
 }
 impl<'a> ImageView<'a> {
     /// Validate dimensions and exact sample count without copying pixels.
@@ -171,6 +215,16 @@ impl<'a> ImageView<'a> {
         color_type: ColorType,
         pixels: &'a [f32],
     ) -> Result<Self> {
+        Self::with_row_order(width, height, color_type, pixels, RowOrder::TopFirst)
+    }
+    /// Validate a buffer whose physical row order is specified explicitly.
+    pub fn with_row_order(
+        width: usize,
+        height: usize,
+        color_type: ColorType,
+        pixels: &'a [f32],
+        row_order: RowOrder,
+    ) -> Result<Self> {
         if sample_count(width, height, color_type)? != pixels.len() {
             return Err(Error::Invalid("sample count does not match dimensions"));
         }
@@ -179,6 +233,7 @@ impl<'a> ImageView<'a> {
             height,
             color_type,
             pixels,
+            row_order,
         })
     }
     /// Width in pixels.
@@ -193,7 +248,28 @@ impl<'a> ImageView<'a> {
     pub fn color_type(self) -> ColorType {
         self.color_type
     }
-    /// Borrow all samples.
+    /// Physical row order of the sample buffer.
+    pub fn row_order(self) -> RowOrder {
+        self.row_order
+    }
+    /// Borrow a logical row counted from the top, or None when out of bounds.
+    pub fn row(self, y: usize) -> Option<&'a [f32]> {
+        if y >= self.height {
+            return None;
+        }
+        let physical = match self.row_order {
+            RowOrder::TopFirst => y,
+            RowOrder::BottomFirst => self.height - 1 - y,
+        };
+        let width = self.width * self.color_type.channels();
+        Some(&self.pixels[physical * width..(physical + 1) * width])
+    }
+    pub(crate) fn file_rows(self) -> impl Iterator<Item = &'a [f32]> {
+        (0..self.height)
+            .rev()
+            .map(move |y| self.row(y).expect("row index is in bounds"))
+    }
+    /// Borrow all samples in physical `row_order()`.
     pub fn pixels(self) -> &'a [f32] {
         self.pixels
     }

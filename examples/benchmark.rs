@@ -1,5 +1,5 @@
 //! Opt-in release-mode file benchmark; orchestration lives in benchmarks/compare.py.
-use rustpfm::{ColorType, DecodeOptions, EncodeOptions, Image, read_pfm, write_pfm};
+use rustpfm::{ColorType, DecodeOptions, EncodeOptions, Image, RowOrder, read_pfm, write_pfm};
 use std::{error::Error, fs, hint::black_box, path::Path, time::Instant};
 
 fn validate_file(path: &Path, image: &Image, scale: f32) -> Result<(), Box<dyn Error>> {
@@ -35,8 +35,11 @@ fn validate_file(path: &Path, image: &Image, scale: f32) -> Result<(), Box<dyn E
 }
 fn main() -> Result<(), Box<dyn Error>> {
     let args: Vec<String> = std::env::args().collect();
-    if args.len() != 8 {
-        return Err("usage: benchmark read|write SIZE CHANNELS SCALE REPEATS WARMUP FILE".into());
+    if !(8..=9).contains(&args.len()) {
+        return Err(
+            "usage: benchmark read|write SIZE CHANNELS SCALE REPEATS WARMUP FILE [top|bottom]"
+                .into(),
+        );
     }
     let operation = args[1].as_str();
     if !matches!(operation, "read" | "write") {
@@ -56,6 +59,11 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Err("repeats must be positive".into());
     }
     let path = Path::new(&args[7]);
+    let row_order = match args.get(8).map(String::as_str).unwrap_or("top") {
+        "top" => RowOrder::TopFirst,
+        "bottom" => RowOrder::BottomFirst,
+        _ => return Err("invalid row order".into()),
+    };
     let count = size
         .checked_mul(size)
         .and_then(|n| n.checked_mul(channels))
@@ -72,7 +80,10 @@ fn main() -> Result<(), Box<dyn Error>> {
         let decoded = if operation == "read" {
             Some(black_box(read_pfm(
                 black_box(path),
-                DecodeOptions::default(),
+                DecodeOptions {
+                    row_order,
+                    ..Default::default()
+                },
             )?))
         } else {
             write_pfm(black_box(path), black_box(image.view()), options)?;
@@ -88,8 +99,13 @@ fn main() -> Result<(), Box<dyn Error>> {
                 (decoded.width(), decoded.height(), decoded.color_type()),
                 (size, size, color)
             );
-            for (&actual, &expected) in decoded.pixels().iter().zip(image.pixels()) {
-                assert_eq!(actual, expected * scale);
+            assert_eq!(decoded.row_order(), row_order);
+            for y in 0..size {
+                for (&actual, &expected) in
+                    decoded.row(y).unwrap().iter().zip(image.row(y).unwrap())
+                {
+                    assert_eq!(actual, expected * scale);
+                }
             }
         } else {
             validate_file(path, &image, scale)?;

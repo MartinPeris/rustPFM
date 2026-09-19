@@ -11,8 +11,8 @@ A small Portable Float Map (PFM) image library inspired by
 
 ## At a glance
 
-- **Zero default dependencies**, safe Rust, Rust **1.85+**; validated on Linux.
-- Grayscale/RGB float32 images, both byte orders, and top-first owned pixels.
+- **Zero default dependencies**, safe public APIs, Rust **1.85+**; validated on Linux.
+- Grayscale/RGB float32 images, both byte orders; top-first or file-order storage.
 - Bytes, buffered readers, writers, and atomic file replacement.
 - Bounded headers, checked dimensions, optional pixel limits, explicit scale modes.
 - Optional `ndarray` views and conversion, including strided input.
@@ -54,7 +54,11 @@ Use scale 1 to preserve sample values. Default decoding multiplies by the header
 magnitude, matching justPFM's convention; `ScaleMode::Raw` preserves stored
 samples. Netpbm uses a different nonunit scale convention. See the
 [API reference](https://github.com/MartinPeris/rustPFM/blob/main/API.md) for scale,
-layout, streaming, memory, and filesystem details.
+layout, streaming, memory, and filesystem details. For direct file-order decoding,
+set `row_order: RowOrder::BottomFirst`; logical `row(y)` and ndarray views still
+count from the top. The default `hugepages` feature requests best-effort Linux
+huge pages; use `default-features = false` to disable it. See the
+[safety and allocation policy](https://github.com/MartinPeris/rustPFM/blob/main/SAFETY.md).
 
 ## Further reading
 

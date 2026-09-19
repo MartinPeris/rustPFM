@@ -1,6 +1,6 @@
 //! Bounded parsing and owned decoding.
 use crate::{
-    ByteOrder, ColorType, DecodeOptions, Error, Header, Image, Result, ScaleMode,
+    ByteOrder, ColorType, DecodeOptions, Error, Header, Image, Result, RowOrder, ScaleMode,
     image::sample_count,
 };
 use std::io::{self, BufRead, Cursor, Read};
@@ -10,7 +10,7 @@ const MAX_HEADER_LINE: u64 = 4096;
 /// Decode exactly one complete PFM byte buffer.
 ///
 /// Validates its full length before allocating pixels. Rows are returned
-/// top-first and contiguous, in native byte order. The default applies the
+/// in the requested physical order (top-first by default), in native byte order. The default applies the
 /// float32 header scale; use [`ScaleMode::Raw`] to preserve stored samples.
 pub fn decode(payload: &[u8], options: DecodeOptions) -> Result<Image> {
     decode_reader_sized(Cursor::new(payload), options, Some(payload.len() as u64))
@@ -103,44 +103,28 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
             return Err(Error::Invalid("payload length does not match dimensions"));
         }
     }
-    let mut pixels = Vec::new();
-    pixels
-        .try_reserve_exact(count)
-        .map_err(|_| Error::Allocation)?;
-    pixels.resize(count, 0.0);
-    let row_samples = width * color_type.channels();
-    let mut buffer = [0u8; 64 * 1024];
-    let apply_scale = options.scale_mode == ScaleMode::Apply && scale != 1.0;
-    let mut unread = payload_bytes;
-    let mut available = &buffer[..0];
-    for row in pixels.chunks_exact_mut(row_samples).rev() {
-        let mut remaining = row;
-        while !remaining.is_empty() {
-            if available.is_empty() {
-                let count = unread.min(buffer.len());
-                if let Err(error) = reader.read_exact(&mut buffer[..count]) {
-                    return if error.kind() == io::ErrorKind::UnexpectedEof {
-                        Err(Error::Invalid("truncated pixel payload"))
-                    } else {
-                        Err(error.into())
-                    };
-                }
-                unread -= count;
-                available = &buffer[..count];
-            }
-            let count = remaining.len().min(available.len() / 4);
-            let (chunk, rest) = remaining.split_at_mut(count);
-            let (bytes, buffered) = available.split_at(count * 4);
-            for (pixel, encoded) in chunk.iter_mut().zip(bytes.chunks_exact(4)) {
-                let bits = [encoded[0], encoded[1], encoded[2], encoded[3]];
-                let value = match byte_order {
-                    ByteOrder::Little => f32::from_le_bytes(bits),
-                    ByteOrder::Big => f32::from_be_bytes(bits),
-                };
-                *pixel = if apply_scale { value * scale } else { value };
-            }
-            remaining = rest;
-            available = buffered;
+    let mut pixels = crate::buffer::zeroed(count)?;
+    // Read the contiguous on-disk payload in one operation, then reverse rows.
+    if let Err(error) = reader.read_exact(crate::buffer::bytes_mut(&mut pixels)) {
+        return if error.kind() == io::ErrorKind::UnexpectedEof {
+            Err(Error::Invalid("truncated pixel payload"))
+        } else {
+            Err(error.into())
+        };
+    }
+    let native = if cfg!(target_endian = "little") {
+        ByteOrder::Little
+    } else {
+        ByteOrder::Big
+    };
+    if byte_order != native {
+        for pixel in &mut pixels {
+            *pixel = f32::from_bits(pixel.to_bits().swap_bytes());
+        }
+    }
+    if options.scale_mode == ScaleMode::Apply && scale != 1.0 {
+        for pixel in &mut pixels {
+            *pixel *= scale;
         }
     }
     let mut extra = [0u8; 1];
@@ -152,7 +136,7 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
             Err(error) => return Err(error.into()),
         }
     }
-    Ok(Image::from_decoded(
+    let mut image = Image::from_decoded(
         Header {
             width,
             height,
@@ -161,5 +145,8 @@ pub(crate) fn decode_reader_sized<R: BufRead>(
             byte_order,
         },
         pixels,
-    ))
+        RowOrder::BottomFirst,
+    );
+    image.set_row_order(options.row_order);
+    Ok(image)
 }

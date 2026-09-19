@@ -1,16 +1,21 @@
 //! Optional ndarray interoperability.
-use crate::{ColorType, Error, Image, Result, image::sample_count};
+use crate::{ColorType, Error, Image, Result, RowOrder, image::sample_count};
 use ndarray::{ArrayView, ArrayView3, Dimension};
 
 impl Image {
-    /// Borrow the image as a height × width × channels ndarray view, without copying.
+    /// Borrow a logical top-first height × width × channels view, without copying.
+    /// Bottom-first storage is represented by a negative row stride.
     #[must_use]
     pub fn as_ndarray(&self) -> ArrayView3<'_, f32> {
-        ArrayView3::from_shape(
+        let mut view = ArrayView3::from_shape(
             (self.height(), self.width(), self.color_type().channels()),
             self.pixels(),
         )
-        .expect("validated image dimensions match its sample count")
+        .expect("validated image dimensions match its sample count");
+        if self.row_order() == RowOrder::BottomFirst {
+            view.invert_axis(ndarray::Axis(0));
+        }
+        view
     }
     /// Copy a 2D grayscale or 3D HWC ndarray into owned, contiguous pixels.
     ///
