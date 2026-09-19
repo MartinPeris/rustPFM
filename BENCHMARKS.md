@@ -1,5 +1,9 @@
 # Performance comparison
 
+The quality harness now includes a [paired performance regression gate](benchmarks/REGRESSION.md).
+It compares source revisions on the same host; the cross-library reports below
+remain informational.
+
 **Current candidate:** see the [direct-buffer results](benchmarks/FAST_PATH.md)
 for matched before/after runs against both libraries, allocation controls and
 explicit storage-order comparisons. The [earlier I/O optimization report](benchmarks/OPTIMIZATION.md)

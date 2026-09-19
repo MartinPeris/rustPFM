@@ -13,7 +13,10 @@ Run `./scripts/check.sh` before opening a pull request. It runs formatting,
 a zero-default-dependency check, Clippy with warnings denied, unit/integration/doc tests with default dependencies
 disabled and all features enabled, a **95% library line coverage gate**, rustdoc with warnings
 denied, `cargo package` with compilation verification, and the Miri safety checks
-in `scripts/check-safety.sh`. Cargo.lock is tracked
+in `scripts/check-safety.sh`, followed by a paired performance regression gate
+against a pinned fast revision. A slowdown above both 20% and 0.2 ms in all
+three paired trials fails locally and in CI; partial confirmation warns. See
+[the policy and report guide](benchmarks/REGRESSION.md). Cargo.lock is tracked
 so local and CI checks resolve the same dependencies. The default build has none. Package verification creates an archive locally; it does not publish it.
 
 The safety script uses pinned `nightly-2026-09-19` with Miri and rust-src, installed
